@@ -1,45 +1,74 @@
 import { Tabs } from 'expo-router';
 import React from 'react';
-import { Platform } from 'react-native';
+import { View, Image, TouchableOpacity } from 'react-native';
 
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
-import { Colors } from '@/constants/Colors';
-import { useColorScheme } from '@/hooks/useColorScheme';
 
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import { Fontisto } from '@expo/vector-icons';
 export default function TabLayout() {
-  const colorScheme = useColorScheme();
-
   return (
     <Tabs
-      screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme ?? 'light'].tint,
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarBackground: TabBarBackground,
-        tabBarStyle: Platform.select({
-          ios: {
-            // Use a transparent background on iOS to show the blur effect
-            position: 'absolute',
-          },
-          default: {},
-        }),
-      }}>
+  screenOptions={{
+    headerTitle: '',
+    headerStyle: {
+      backgroundColor: "white",
+      elevation: 0, 
+      shadowOpacity: 0, 
+      borderBottomWidth: 0, 
+    },
+    tabBarStyle: {
+      position: 'absolute',
+      
+      height: 70,
+      backgroundColor: 'white',
+      borderColor: 'white',
+      borderTopWidth: 0, 
+      shadowOpacity: 0, 
+      elevation: 0, 
+    },
+    headerLeft: () => (
+      <Image
+        source={require('@/assets/STBlogo.png')}
+        style={{ width: 45, height: 45, marginLeft: 14 ,marginTop:15 }}
+      />
+    ),
+    headerRight: () => (
+      <View style={{ flexDirection: 'row', alignItems: 'center' }}>
+        <TouchableOpacity style={{ marginRight: 14,marginTop:15 }}>
+          <Fontisto name="bell" size={24} color="black" />
+        </TouchableOpacity>
+        <TouchableOpacity>
+          
+        </TouchableOpacity>
+      </View>
+    ),
+    
+  }}>
+
+        
+
       <Tabs.Screen
         name="index"
         options={{
-          title: 'Home',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
+          title: 'Wallet',
+          tabBarIcon: ({ color }) => <Fontisto size={28} name="wallet" color={color} />,
         }}
       />
       <Tabs.Screen
-        name="explore"
+        name="account"
         options={{
-          title: 'Explore',
-          tabBarIcon: ({ color }) => <IconSymbol size={28} name="paperplane.fill" color={color} />,
+          title: 'Account',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="bank" size={28} color={color} />,
         }}
       />
+      <Tabs.Screen
+        name="send"
+        options={{
+          title: 'Send',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="send" size={28} color={color} />,
+        }}
+      />
+      
     </Tabs>
   );
 }
