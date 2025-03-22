@@ -2,6 +2,7 @@
 import { useRouter } from "expo-router";
 import { Stack } from "expo-router/stack";
 import "../global.css";
+import { Ionicons } from '@expo/vector-icons';
 export default function App() {
   return (
     <Stack>
@@ -26,9 +27,10 @@ export default function App() {
         options={{ title: "Login", headerShown: false }}
       />
       <Stack.Screen 
-       name="View/cards_details"
-       options={{ title: "Card Details",  }}
+       name="View/(Carts)"
+       options={{ headerShown: false }}
       />
+
       <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
     </Stack>
   )

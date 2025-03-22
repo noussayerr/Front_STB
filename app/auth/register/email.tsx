@@ -33,6 +33,7 @@ const Email: React.FC = () => {
   const { setCurrentStep, setFormData, formData } = useContext(AppContext)!;
   const router = useRouter();
 
+  console.log('Form data:', formData);
   const handleSubmit =async () => {
     setFormData({ ...formData, email, password, confirmPassword });
     

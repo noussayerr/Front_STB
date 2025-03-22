@@ -74,8 +74,8 @@ const SignUpScreen: React.FC = () => {
               onSelected={(value: string) => setCurrent(value)}
               radioBackground="#2563eb"
               >
-              <RadioButtonItem value="option1" label={<Text className="text-lg">Male</Text>} style={{ margin: 10 }} />
-              <RadioButtonItem value="option2" label={<Text className="text-lg">Female</Text>} style={{ margin: 10 }} />
+              <RadioButtonItem value="Male" label={<Text className="text-lg">Male</Text>} style={{ margin: 10 }} />
+              <RadioButtonItem value="Female" label={<Text className="text-lg">Female</Text>} style={{ margin: 10 }} />
             </RadioButtonGroup>
           </View>
             <TouchableOpacity onPress={handleNext} className="bg-[#2563eb] rounded-2xl py-4 flex-row justify-center" activeOpacity={0.8}>

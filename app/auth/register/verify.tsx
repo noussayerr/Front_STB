@@ -4,7 +4,7 @@ import { View, Text, TextInput, TouchableOpacity, Alert, Image,StatusBar } from 
 import { useNavigation } from "@react-navigation/native";
 import { MotiView } from "moti";
 import { router } from "expo-router";
-
+import axios from "axios";
 type InputRef = TextInput | null;
 
 type EmailVerificationScreenProps = {};
@@ -46,9 +46,10 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = () => {
   const handleSubmit = async () => {
     const verificationCode = code.join("");
     try {
-      //await verifyEmail(verificationCode);
+      console.log(verificationCode);
+       await axios.post('http://localhost:5000/api/authroutes/verify_email', {verificationCode});
+       router.push("/(tabs)");
       Alert.alert("Success", "Email verified successfully");
-      router.push("/");
     } catch (error: any) {
       Alert.alert("Error", error.message || "Verification failed");
     }
