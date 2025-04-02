@@ -1,48 +1,46 @@
 import { Tabs } from 'expo-router';
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Fontisto } from '@expo/vector-icons';
-
+import { router } from 'expo-router';
+import { useTheme } from "../providers/ThemeProvider"; 
+import Feather from '@expo/vector-icons/Feather';
 export default function TabLayout() {
   const { height } = Dimensions.get('window');
-  const headerHeight = height * 0.12; // Adjust the multiplier to get the desired height
+  const headerHeight = height * 0.12;
+  const [isNotificationPressed, setIsNotificationPressed] = useState(false);
+  const { theme } = useTheme();
 
   return (
     <Tabs
       screenOptions={{
-        headerTitle: '',
-        headerStyle: {
-          backgroundColor: "white",
-          elevation: 0, 
-          shadowOpacity: 0, 
-          borderBottomWidth: 0, 
-          height: headerHeight, // Use the calculated height
-        },
         tabBarStyle: {
           position: 'absolute',
           height: 70,
-          backgroundColor: 'white',
+          backgroundColor: theme === "dark" ? "#121212" : "white", // Adjust tabBar color based on theme
           borderColor: 'white',
-          borderTopWidth: 0, 
-          shadowOpacity: 0, 
-          elevation: 0, 
+          borderTopWidth: 0,
+          shadowOpacity: 0,
+          elevation: 0,
+        },
+        headerTitle: '',
+        headerStyle: {
+          backgroundColor: theme === "dark" ? "#121212" : "white", // Header background color
+          elevation: 0,
+          shadowOpacity: 0,
+          borderBottomWidth: 0,
+          height: headerHeight,
         },
         headerLeft: () => (
           <Image
             source={require('@/assets/STBlogo.png')}
-            style={{ width: 45, height: 45, marginLeft: 10  }}
-            className=''
+            style={{ width: 45, height: 45, marginLeft: 10 }}
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: 'row', alignItems: 'center' }}>
-            <TouchableOpacity style={{ marginRight: 10 }}>
-              <Fontisto name="bell" size={24} color="black" />
-            </TouchableOpacity>
-            <TouchableOpacity>
-              {/* Add another icon or component here if needed */}
-            </TouchableOpacity>
+          <View style={{ flexDirection: 'row', alignItems: 'center',  marginRight: 10 }}>
+             <Feather name="settings" size={24} color="white" />
           </View>
         ),
       }}
@@ -55,7 +53,7 @@ export default function TabLayout() {
         }}
       />
       <Tabs.Screen
-        name="account"
+        name="(account)"
         options={{
           title: 'Account',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="bank" size={28} color={color} />,
@@ -66,6 +64,14 @@ export default function TabLayout() {
         options={{
           title: 'Send',
           tabBarIcon: ({ color }) => <MaterialCommunityIcons name="send" size={28} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="(notification)"
+        options={{
+          headerShown: false,
+          title: 'Notifications',
+          tabBarIcon: ({ color }) => <Fontisto size={28} name="bell" color={color} />,
         }}
       />
     </Tabs>

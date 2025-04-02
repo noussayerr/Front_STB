@@ -1,0 +1,20 @@
+{
+  "login": "Login",
+  "createAccount": "Create Account",
+  "bestDigitalSolution": "Best Digital Solution",
+  "achieveYourGoals": "Achieve Your Goals",
+  "increaseYourValue": "Increase Your Value",
+  "slide1Subtitle": "Your secure and easy banking, anytime, anywhere.",
+  "slide2Subtitle": "Achieve your financial goals with our tools.",
+  "slide3Subtitle": "Increase your value with our services.",
+  "slide4Subtitle": "Manage your finances effortlessly.",
+  "email": "Email",
+  "enterEmail": "Enter your Email",
+  "password": "Password",
+  "enterPassword": "Enter your Password",
+  "forgotPassword": "Forgot your password?",
+  "noAccount": "Don't have an account?",
+  "signUp": "Sign Up",
+  "balance":"Total Balance",
+  "My Cards":"My Cards"
+}

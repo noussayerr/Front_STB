@@ -1,0 +1,20 @@
+{
+  "login": "تسجيل الدخول",
+  "createAccount": "إنشاء حساب",
+  "bestDigitalSolution": "أفضل حل رقمي",
+  "achieveYourGoals": "حقق أهدافك",
+  "increaseYourValue": "زِد قيمتك",
+  "slide1Subtitle": "خدماتك المصرفية الآمنة والسهلة، في أي وقت، وفي أي مكان.",
+  "slide2Subtitle": "حقق أهدافك المالية باستخدام أدواتنا.",
+  "slide3Subtitle": "زِد قيمتك باستخدام خدماتنا.",
+  "slide4Subtitle": "إدارة أموالك بسهولة.",
+  "email": "البريد الإلكتروني",
+  "enterEmail": "أدخل بريدك الإلكتروني",
+  "password": "كلمة المرور",
+  "enterPassword": "أدخل كلمة المرور",
+  "forgotPassword": "هل نسيت كلمة المرور؟",
+  "noAccount": "ليس لديك حساب؟",
+  "signUp": "إنشاء حساب",
+  "balance":"الرصيد الإجمالي",
+  "My Cards":"بطاقاتي"
+}

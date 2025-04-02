@@ -1,9 +1,10 @@
 // moreinfo.js
 import React, { useEffect, useState, useContext } from 'react';
-import { Alert, StatusBar, StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Alert, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View } from 'react-native';
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import  AppContext  from './AppContext';  
+import Rib from '@/app/components/rib';
 
 interface DropdownOption {
   value: string;
@@ -112,6 +113,7 @@ const Moreinfo: React.FC = () => {
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
       <View style={styles.dropdownContainer} className='flex gap-6'>
         <View className='flex gap-2'>
+          <Rib />
           <Text className='text-lg font-semibold '>Where you leave ?</Text>
           <Dropdown
             style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
@@ -214,6 +216,7 @@ const styles = StyleSheet.create({
     borderRadius: 8,
     paddingHorizontal: 8,
     marginBottom: 10,
+    backgroundColor: '#F5F9FE',
   },
   placeholderStyle: {
     fontSize: 16,
