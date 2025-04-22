@@ -25,11 +25,15 @@ export default function accountLayout() {
       />
       <Stack.Screen
           name="openaccount"
-          options={{ title: "Open account", headerShown: true }}
+          options={{ title: "Open account", headerShown: false }}
         />
       <Stack.Screen
         name="accountsscreen"
         options={{ title: "Accounts", headerShown: false }}
+      />
+      <Stack.Screen
+        name="offers"
+        options={{ title: "offers", headerShown: false }}
       />
       
       

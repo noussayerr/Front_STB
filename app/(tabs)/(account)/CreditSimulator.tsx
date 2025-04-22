@@ -46,7 +46,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
         backgroundColor={theme === "dark" ? "#121212" : "#ffffff"} 
       />
 
-      <View className={`px-5 py-4 flex-row items-center justify-between border-b ${theme === "dark" ? "border-gray-800" : "border-gray-100"}`}>
+      <View className={`px-5 py-4 flex-row items-center gap-2 border-b ${theme === "dark" ? "border-gray-800" : "border-gray-100"}`}>
         <TouchableOpacity onPress={() => router.back()}>
           <AntDesign name="arrowleft" size={24} color={theme === "dark" ? "#f8fafc" : "#0f172a"} />
         </TouchableOpacity>
@@ -56,7 +56,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
         <View style={{ width: 24 }} />
       </View>
 
-      <ScrollView className="flex mt-20" showsVerticalScrollIndicator={false}>
+      <ScrollView className="flex mb-20" showsVerticalScrollIndicator={false}>
         <View className="p-5">
           <Animated.View 
             entering={FadeInDown.duration(400)} 

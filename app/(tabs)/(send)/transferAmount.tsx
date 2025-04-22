@@ -1,8 +1,8 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, Image, StyleSheet } from "react-native";
-import { ChevronLeft, ChevronDown, Delete } from "lucide-react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, Image, StyleSheet, Modal } from "react-native";
+import { ChevronLeft, ChevronDown, Delete, X } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { useTheme } from "@/app/providers/ThemeProvider"
+import { useTheme } from "@/app/providers/ThemeProvider";
 
 type Recipient = {
   name: string;
@@ -20,6 +20,9 @@ export default function TransferAmount() {
 
   const parsedRecipient: Recipient = JSON.parse(recipient);
   const [amount, setAmount] = useState("0");
+  const [pinModalVisible, setPinModalVisible] = useState(false);
+  const [pin, setPin] = useState("");
+  const [pinError, setPinError] = useState("");
 
   const handleNumberPress = (num: string) => {
     if (amount === "0") {
@@ -44,19 +47,43 @@ export default function TransferAmount() {
   };
 
   const handleContinue = () => {
-    router.push({
-      pathname: "/(tabs)/(send)/transferSuccess",
-      params: {
-        amount,
-        recipient: JSON.stringify(parsedRecipient),
-      },
-    });
+    setPinModalVisible(true);
+  };
+
+  const handlePinNumberPress = (num: string) => {
+    if (pin.length < 4) {
+      setPin(pin + num);
+    }
+  };
+
+  const handlePinDelete = () => {
+    if (pin.length > 0) {
+      setPin(pin.slice(0, -1));
+    }
+  };
+
+  const handlePinSubmit = () => {
+    // In a real app, you would validate the PIN against a stored value or API
+    // For this example, we'll use a simple validation (PIN = 1234)
+    if (pin === "1234") {
+      setPinModalVisible(false);
+      setPin("");
+      setPinError("");
+      router.push({
+        pathname: "/(tabs)/(send)/transferSuccess",
+        params: {
+          amount,
+          recipient: JSON.stringify(parsedRecipient),
+        },
+      });
+    } else {
+      setPinError("Invalid PIN. Please try again.");
+      setPin("");
+    }
   };
 
   return (
     <SafeAreaView className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-blue-600"}`}>
-      
-      
       <View className="px-4 py-4 flex-row items-start mt-4 h-28">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -128,6 +155,103 @@ export default function TransferAmount() {
           </TouchableOpacity>
         </View>
       </View>
+
+      {/* PIN Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={pinModalVisible}
+        onRequestClose={() => {
+          setPinModalVisible(false);
+          setPin("");
+          setPinError("");
+        }}
+      >
+        <View className="flex-1 justify-end">
+          <View className={`${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-t-3xl p-6 h-2/3`}>
+            <View className="flex-row justify-between items-center mb-6">
+              <Text className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
+                Enter PIN
+              </Text>
+              <TouchableOpacity 
+                onPress={() => {
+                  setPinModalVisible(false);
+                  setPin("");
+                  setPinError("");
+                }}
+                className={`w-8 h-8 rounded-full items-center justify-center ${theme === "dark" ? "bg-gray-700" : "bg-gray-100"}`}
+              >
+                <X size={20} color={theme === "dark" ? "#fff" : "#000"} />
+              </TouchableOpacity>
+            </View>
+            
+            <Text className={`text-center mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
+              Please enter your PIN to confirm the transaction
+            </Text>
+            
+            {pinError ? (
+              <Text className="text-red-500 text-center mb-4">{pinError}</Text>
+            ) : null}
+            
+            <View className="flex-row justify-center space-x-4 mb-8">
+              {[0, 1, 2, 3].map((index) => (
+                <View 
+                  key={index} 
+                  className={`w-4 h-4 rounded-full ${
+                    pin.length > index 
+                      ? "bg-blue-600" 
+                      : theme === "dark" 
+                        ? "border border-gray-500" 
+                        : "border border-gray-300"
+                  }`} 
+                />
+              ))}
+            </View>
+            
+            <View style={styles.pinPad}>
+              {[1, 2, 3, 4, 5, 6, 7, 8, 9].map((num) => (
+                <TouchableOpacity
+                  key={num}
+                  style={styles.pinButton}
+                  onPress={() => handlePinNumberPress(num.toString())}
+                >
+                  <Text className={`text-2xl ${theme === "dark" ? "text-white" : "text-gray-800"}`}>{num}</Text>
+                </TouchableOpacity>
+              ))}
+              
+              <View style={styles.pinButton} />
+              
+              <TouchableOpacity
+                style={styles.pinButton}
+                onPress={() => handlePinNumberPress("0")}
+              >
+                <Text className={`text-2xl ${theme === "dark" ? "text-white" : "text-gray-800"}`}>0</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                style={styles.pinButton}
+                onPress={handlePinDelete}
+              >
+                <Delete size={24} color={theme === "dark" ? "#9ca3af" : "#4B5563"} />
+              </TouchableOpacity>
+            </View>
+            
+            <TouchableOpacity 
+              className={`w-full py-4 rounded-xl items-center mt-6 ${
+                pin.length === 4 ? "bg-blue-600" : theme === "dark" ? "bg-gray-700" : "bg-gray-200"
+              }`} 
+              onPress={handlePinSubmit}
+              disabled={pin.length !== 4}
+            >
+              <Text className={`font-semibold text-lg ${
+                pin.length === 4 ? "text-white" : theme === "dark" ? "text-gray-400" : "text-gray-500"
+              }`}>
+                Confirm
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </SafeAreaView>
   );
 }
@@ -142,6 +266,19 @@ const styles = StyleSheet.create({
   },
   numberButton: {
     width: "30%",
+    height: 64,
+    alignItems: "center",
+    justifyContent: "center",
+    marginBottom: 12,
+  },
+  pinPad: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    justifyContent: "space-between",
+    width: "100%",
+  },
+  pinButton: {
+    width: "33%",
     height: 64,
     alignItems: "center",
     justifyContent: "center",

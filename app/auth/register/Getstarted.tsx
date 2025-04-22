@@ -1,8 +1,11 @@
 import React, { useState, useContext } from 'react';
-import { View, Text, TextInput, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform } from 'react-native';
+import { View, Text, TextInput, ScrollView, SafeAreaView, StatusBar, TouchableOpacity, StyleSheet, KeyboardAvoidingView, Platform, ActivityIndicator } from 'react-native';
 import RadioButtonGroup, { RadioButtonItem } from "expo-radio-button";
-import AppContext from './AppContext';
 import { Dropdown } from 'react-native-element-dropdown';
+import Rib from '@/app/components/rib';
+import { useAuthStore } from "@/app/zustand/authStore";
+import  AppContext  from './AppContext';
+
 
 interface DropdownOption {
   value: string;
@@ -21,25 +24,67 @@ const SignUpScreen: React.FC = () => {
   const [age, setAge] = useState<string>(formData.age || '');
   const [firstName, setFirstName] = useState<string>(formData.firstName || '');
   const [lastName, setLastName] = useState<string>(formData.lastName || '');
-  const [errors, setErrors] = useState<{ firstName?: string; lastName?: string; age?: string; gender?: string }>({});
+  const [ribError, setRibError] = useState<string>('');
+  const [isCheckingRib, setIsCheckingRib] = useState<boolean>(false);
+  const [errors, setErrors] = useState<{ 
+    firstName?: string; 
+    lastName?: string; 
+    age?: string; 
+    gender?: string;
+    rib?: string;
+  }>({});
 
-  const handleNext = () => {
+  const { findrrib, error } = useAuthStore();
+  console.log(error)
+  const validateRIB = async () => {
+    if (!formData.rib || formData.rib.trim() === '') {
+      setRibError('RIB is required');
+      return false;
+    }
+  
+    setIsCheckingRib(true);
+    setRibError(''); // Clear previous errors
+    
+    try {
+      await findrrib(formData.rib);
+      return true; // RIB is valid
+    } catch (err) {
+      setRibError(error || 'Invalid RIB');
+      return false;
+    } finally {
+      setIsCheckingRib(false);
+    }
+  };
+  
+  const handleNext = async () => {
+    // First validate all basic fields
     let newErrors: typeof errors = {};
-
+    
     if (!firstName.trim()) newErrors.firstName = 'First name is required';
     if (!lastName.trim()) newErrors.lastName = 'Last name is required';
     if (!age) newErrors.age = 'Age is required';
     if (!current) newErrors.gender = 'Gender is required';
-
+    
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
-
-    setFormData({ ...formData, gender: current, age, firstName, lastName });
-    setCurrentStep(1);
+  
+    // Then validate RIB
+    const isRibValid = await validateRIB();
+    
+    // Only proceed if RIB is valid OR if there's an error but we want to allow continuation
+    if (isRibValid ) { // Modified this line to your requirements
+      setFormData({ 
+        ...formData, 
+        gender: current, 
+        age, 
+        firstName, 
+        lastName 
+      });
+      setCurrentStep(1);
+    }
   };
-
   return (
     <View className="flex-1 bg-white">
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
@@ -47,6 +92,16 @@ const SignUpScreen: React.FC = () => {
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : undefined} style={{ flex: 1 }}>
           <View className="px-6">
             <View className="space-y-6 mt-10 flex gap-10">
+              {/* RIB Component with validation */}
+              <View>
+                <Rib />
+                {isCheckingRib ? (
+                  <ActivityIndicator size="small" color="#2563eb" style={styles.loading} />
+                ) : (
+                  ribError ? <Text style={styles.errorText}>{ribError}</Text> : null
+                )}
+              </View>
+
               {/* First Name */}
               <View>
                 <Text className="font-semibold mb-2 text-lg">First Name</Text>
@@ -115,8 +170,17 @@ const SignUpScreen: React.FC = () => {
               </View>
 
               {/* Submit Button */}
-              <TouchableOpacity onPress={handleNext} className="bg-[#2563eb] rounded-2xl py-4 flex-row justify-center" activeOpacity={0.8}>
-                <Text className="text-white font-bold text-xl">Get started</Text>
+              <TouchableOpacity 
+                onPress={handleNext} 
+                className="bg-[#2563eb] rounded-2xl py-4 flex-row justify-center" 
+                activeOpacity={0.8}
+                disabled={isCheckingRib}
+              >
+                {isCheckingRib ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white font-bold text-xl">Get started</Text>
+                )}
               </TouchableOpacity>
             </View>
           </View>
@@ -124,9 +188,7 @@ const SignUpScreen: React.FC = () => {
       </ScrollView>
     </View>
   );
-};
-
-export default SignUpScreen;
+};export default SignUpScreen;
 
 const styles = StyleSheet.create({
   dropdown: {
@@ -140,5 +202,8 @@ const styles = StyleSheet.create({
     color: 'red',
     fontSize: 14,
     marginTop: 4,
+  },
+  loading: {
+    marginTop: 8,
   },
 });

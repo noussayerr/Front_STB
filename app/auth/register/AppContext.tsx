@@ -1,6 +1,7 @@
 // auth/register/AppContext.tsx
 import React, { createContext, useState, ReactNode } from 'react';
 
+// auth/register/AppContext.tsx
 interface FormData {
   firstName?: string;
   lastName?: string;
@@ -14,6 +15,7 @@ interface FormData {
   email?: string;
   password?: string;
   confirmPassword?: string;
+  rib?: string; // Add RIB field
 }
 
 interface AppContextType {

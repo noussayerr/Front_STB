@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from "react";
-import { View, Text, TextInput, TouchableOpacity, Alert, Image,StatusBar } from "react-native";
+import { View, Text, TextInput, Alert, Image,StatusBar } from "react-native";
 //import { useAuthStore } from "../store/authStore";
 import { useNavigation } from "@react-navigation/native";
 import { MotiView } from "moti";
@@ -46,9 +46,8 @@ const EmailVerificationScreen: React.FC<EmailVerificationScreenProps> = () => {
   const handleSubmit = async () => {
     const verificationCode = code.join("");
     try {
-      console.log(verificationCode);
-       await axios.post('http://localhost:5000/api/authroutes/verify_email', {verificationCode});
-       router.push("/(tabs)");
+       await axios.post('https://backend-stb-1.onrender.com/api/authroutes/verify_email', {verificationCode});
+       router.push("/auth/(verify)/VerificationHome");
       Alert.alert("Success", "Email verified successfully");
     } catch (error: any) {
       Alert.alert("Error", error.message || "Verification failed");

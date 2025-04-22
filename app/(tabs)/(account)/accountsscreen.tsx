@@ -1,104 +1,72 @@
-import { useState } from "react"
-import { View, Text, FlatList, TouchableOpacity, StatusBar, TextInput } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons"
-import Animated from "react-native-reanimated"
-import { useRouter } from "expo-router"
-
-type AccountType = {
-  id: string;
-  name: string;
-  description: string;
-  features: string[];
-  minDeposit: string;
-  monthlyFee: string;
-  icon: string;
-};
+import { useState, useEffect } from "react";
+import { View, Text, FlatList, TouchableOpacity, StatusBar, TextInput, ActivityIndicator } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AntDesign, Feather, MaterialIcons } from "@expo/vector-icons";
+import Animated from "react-native-reanimated";
+import { useRouter } from "expo-router";
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { useAccountStore } from "@/app/zustand/useAccountStore";
 
 export default function AccountTypesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [searchQuery, setSearchQuery] = useState("");
+  const { theme } = useTheme();
+  const { accountTypes = [], isLoading, error, fetchAccountTypes } = useAccountStore();
 
-  const accountTypes: AccountType[] = [
-    {
-      id: "1",
-      name: "Current Account",
-      description: "A flexible account for your daily banking needs with easy access to your money.",
-      features: ["Debit card", "Checkbook", "Online banking", "Mobile app access"],
-      minDeposit: "50 DT",
-      monthlyFee: "5 DT",
-      icon: "account-balance",
-    },
-    {
-      id: "2",
-      name: "Savings Account",
-      description: "Earn interest on your money while keeping it accessible for future needs.",
-      features: ["Competitive interest rates", "ATM access", "No minimum balance", "Automatic transfers"],
-      minDeposit: "100 DT",
-      monthlyFee: "Free",
-      icon: "savings",
-    },
-    {
-      id: "3",
-      name: "Student Account",
-      description: "Designed for students with special benefits and lower fees.",
-      features: ["No monthly fees", "Student discounts", "Free debit card", "Overdraft protection"],
-      minDeposit: "10 DT",
-      monthlyFee: "Free",
-      icon: "school",
-    },
-    {
-      id: "4",
-      name: "Business Account",
-      description: "Manage your business finances with specialized tools and services.",
-      features: ["Multiple users", "Business loans", "Payroll services", "Merchant services"],
-      minDeposit: "500 DT",
-      monthlyFee: "15 DT",
-      icon: "business",
-    },
-    {
-      id: "5",
-      name: "Joint Account",
-      description: "Share account access and management with a partner or family member.",
-      features: ["Multiple debit cards", "Shared access", "Transparent transactions", "Bill splitting"],
-      minDeposit: "100 DT",
-      monthlyFee: "7 DT",
-      icon: "people",
-    },
-    {
-      id: "6",
-      name: "Foreign Currency Account",
-      description: "Hold and manage multiple currencies for international transactions.",
-      features: ["Multiple currencies", "Exchange services", "International transfers", "Travel benefits"],
-      minDeposit: "200 EUR/USD",
-      monthlyFee: "10 DT",
-      icon: "language",
-    },
-  ]
+  useEffect(() => {
+    fetchAccountTypes();
+  }, []);
 
   const filteredAccounts = searchQuery
-  ? accountTypes.filter(
-      (account) =>
-        account.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        account.description.toLowerCase().includes(searchQuery.toLowerCase())
-    )
-  : accountTypes;
+    ? (accountTypes || []).filter(
+        (account) =>
+          account?.name?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
+          account?.description?.toLowerCase()?.includes(searchQuery.toLowerCase())
+      )
+    : accountTypes || [];
+
+  if (isLoading) {
+    return (
+      <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#121212" : "#ffffff" }}>
+        <ActivityIndicator size="large" color={theme === "dark" ? "#ffffff" : "#000000"} />
+        <Text className={`mt-2 ${theme === "dark" ? "text-white" : "text-black"}`}>Loading accounts...</Text>
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className="flex-1 justify-center items-center p-4" style={{ backgroundColor: theme === "dark" ? "#121212" : "#ffffff" }}>
+        <Text className={theme === "dark" ? "text-red-400" : "text-red-600"}>Error: {error}</Text>
+        <TouchableOpacity 
+          className="mt-4 bg-blue-600 px-4 py-2 rounded-lg"
+          onPress={fetchAccountTypes}
+        >
+          <Text className="text-white">Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
-    <View className="flex-1 bg-white" style={{ paddingTop: insets.top }}>
-      <StatusBar barStyle="dark-content" backgroundColor="#ffffff" />
-      
-      {/* Search and header */}
+    <View className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+      <StatusBar 
+        barStyle={theme === "dark" ? "light-content" : "dark-content"} 
+        backgroundColor={theme === "dark" ? "#121212" : "#ffffff"} 
+      />
+     
       <View className="p-5">
-        <Text className="text-base text-slate-600">
+        <Text className={`text-base ${theme === "dark" ? "text-gray-300" : "text-slate-600"}`}>
           Explore our range of accounts designed to meet your financial needs.
         </Text>
 
-        <View className="mt-4 mb-2 flex-row items-center bg-gray-100 rounded-lg px-4 py-2">
-          <Feather name="search" size={20} color="#64748b" />
+        <View className={`mt-4 mb-2 flex-row items-center ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"} rounded-lg px-4 py-2`}>
+          <Feather name="search" size={20} color={theme === "dark" ? "#9ca3af" : "#64748b"} />
           <TextInput
-            className="flex-1 ml-2 text-base text-slate-900"
+            className={`flex-1 ml-2 text-base ${theme === "dark" ? "text-white" : "text-slate-900"}`}
             placeholder="Search accounts..."
+            placeholderTextColor={theme === "dark" ? "#9ca3af" : "#64748b"}
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
@@ -108,16 +76,23 @@ export default function AccountTypesScreen() {
       {/* Account list */}
       <FlatList
         data={filteredAccounts}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+        keyExtractor={(item) => item?.id || Math.random().toString()}
+        contentContainerStyle={{ padding: 16, paddingBottom: 80 }}
         ItemSeparatorComponent={() => <View style={{ height: 16 }} />}
+        ListEmptyComponent={
+          <View className="flex-1 justify-center items-center py-10">
+            <Text className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
+              No accounts found
+            </Text>
+          </View>
+        }
         renderItem={({ item }) => (
           <Animated.View
-            className="bg-white rounded-2xl overflow-hidden border border-gray-100 shadow-sm"
+            className={`rounded-2xl overflow-hidden border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} shadow-sm`}
             style={{
               shadowColor: "#000",
               shadowOffset: { width: 0, height: 2 },
-              shadowOpacity: 0.05,
+              shadowOpacity: theme === "dark" ? 0.1 : 0.05,
               shadowRadius: 5,
               elevation: 2,
             }}
@@ -125,43 +100,68 @@ export default function AccountTypesScreen() {
             <View className="p-5">
               {/* Account details */}
               <View className="flex-row items-center mb-3">
-                <View className="w-12 h-12 rounded-full bg-blue-100 items-center justify-center">
-                  <MaterialIcons name={item.icon as any} size={24} color="#2563eb" />
+                <View className={`w-12 h-12 rounded-full ${theme === "dark" ? "bg-blue-900" : "bg-blue-100"} items-center justify-center`}>
+                  <MaterialIcons 
+                    name={item?.icon as any || "account-balance"} 
+                    size={24} 
+                    color={theme === "dark" ? "#93c5fd" : "#2563eb"} 
+                  />
                 </View>
                 <View className="ml-3">
-                  <Text className="text-lg font-bold text-slate-900">{item.name}</Text>
+                  <Text className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                    {item?.name || "Account"}
+                  </Text>
                   <View className="flex-row items-center">
-                    <Text className="text-sm text-slate-500 mr-2">Min. Deposit: {item.minDeposit}</Text>
-                    <Text className="text-sm text-slate-500">Monthly Fee: {item.monthlyFee}</Text>
+                    <Text className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-slate-500"} mr-2`}>
+                      Min. Deposit: {item?.minDeposit || "N/A"}
+                    </Text>
+                    <Text className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
+                      Monthly Fee: {item?.monthlyFee || "N/A"}
+                    </Text>
                   </View>
                 </View>
               </View>
 
-              <Text className="text-base text-slate-700 mb-3">{item.description}</Text>
+              <Text className={`text-base ${theme === "dark" ? "text-gray-300" : "text-slate-700"} mb-3`}>
+                {item?.description || "No description available"}
+              </Text>
 
-              <Text className="text-sm font-medium text-slate-700 mb-2">Key Features:</Text>
-              <View className="mb-4">
-                {item.features.map((feature, index) => (
-                  <View key={index} className="flex-row items-center mb-1">
-                    <View className="w-5 h-5 rounded-full bg-green-100 items-center justify-center mr-2">
-                      <AntDesign name="check" size={12} color="#16a34a" />
-                    </View>
-                    <Text className="text-sm text-slate-600">{feature}</Text>
+              {item?.features?.length > 0 && (
+                <>
+                  <Text className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-slate-700"} mb-2`}>
+                    Key Features:
+                  </Text>
+                  <View className="mb-4">
+                    {item.features.map((feature, index) => (
+                      <View key={index} className="flex-row items-center mb-1">
+                        <View className={`w-5 h-5 rounded-full ${theme === "dark" ? "bg-green-900" : "bg-green-100"} items-center justify-center mr-2`}>
+                          <AntDesign name="check" size={12} color={theme === "dark" ? "#86efac" : "#16a34a"} />
+                        </View>
+                        <Text className={`text-sm ${theme === "dark" ? "text-gray-300" : "text-slate-600"}`}>
+                          {feature}
+                        </Text>
+                      </View>
+                    ))}
                   </View>
-                ))}
-              </View>
+                </>
+              )}
 
               <View className="flex-row justify-between">
-                <TouchableOpacity className="flex-row items-center">
-                  <Text className="text-sm font-medium text-blue-600 mr-1">Learn more</Text>
-                  <AntDesign name="right" size={12} color="#2563eb" />
+                <TouchableOpacity 
+                  className="flex-row items-center"
+                  onPress={() => router.push(`/(tabs)/(account)/accountdetails/${item?.id}`)}
+                >
+                  <Text className={`text-sm font-medium ${theme === "dark" ? "text-blue-400" : "text-blue-600"} mr-1`}>
+                    Learn more
+                  </Text>
+                  <AntDesign name="right" size={12} color={theme === "dark" ? "#60a5fa" : "#2563eb"} />
                 </TouchableOpacity>
 
                 <TouchableOpacity
                   className="px-4 py-2 bg-blue-600 rounded-lg"
                   onPress={() => router.push({
                     pathname: "/(tabs)/(account)/openaccount",
-                    params:  {accoutid:item.id }
+                    params: { accountid: item?.id }
                   })}
                 >
                   <Text className="text-sm font-medium text-white">Open Account</Text>
@@ -172,6 +172,5 @@ export default function AccountTypesScreen() {
         )}
       />
     </View>
-  )
+  );
 }
-

@@ -5,12 +5,11 @@ import { AntDesign, MaterialIcons, Feather } from "@expo/vector-icons"
 import Animated, { FadeInDown } from "react-native-reanimated"
 import { router } from 'expo-router'
 import { useTheme } from "@/app/providers/ThemeProvider"
-
+import FontAwesome from '@expo/vector-icons/FontAwesome';
 export default function AccountsScreen() {
   const insets = useSafeAreaInsets()
   const [refreshing, setRefreshing] = React.useState(false)
   const { theme } = useTheme()
-
   const accounts = [
     {
       id: "1",
@@ -67,7 +66,6 @@ export default function AccountsScreen() {
           <Text className={`font-bold text-xl mb-3 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
             All Accounts
           </Text>
-
           {accounts.map((account, index) => (
             <View 
               className={`rounded-2xl p-5 mt-5 ${theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-100"}`} 
@@ -146,6 +144,7 @@ export default function AccountsScreen() {
               </Animated.View>
             </View>
           ))}
+          
         </View>
 
         <View className="p-5">
@@ -186,17 +185,14 @@ export default function AccountsScreen() {
                 shadowRadius: 5,
                 elevation: theme === "dark" ? 0 : 2,
               }}
-              onPress={() => router.push('/(tabs)/(account)/openaccount')}
+              onPress={() => router.push('/(tabs)/(account)/accountsscreen')}
             >
               <View className={`w-12 h-12 rounded-full ${theme === "dark" ? "bg-green-900/30" : "bg-green-100"} items-center justify-center mb-2`}>
-                <MaterialIcons 
-                  name="swap-horiz" 
-                  size={22} 
-                  color={theme === "dark" ? "#86efac" : "#16a34a"} 
-                />
+              <FontAwesome name="bank" size={22} 
+                  color={theme === "dark" ? "#86efac" : "#16a34a"}  />
               </View>
               <Text className={`text-sm font-medium ${theme === "dark" ? "text-white" : "text-slate-900"} text-center`}>
-                Transfer Funds
+                Explore Accounts
               </Text>
             </TouchableOpacity>
 

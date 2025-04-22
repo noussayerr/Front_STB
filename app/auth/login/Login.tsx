@@ -5,15 +5,15 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ActivityIndicator
 } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 import { useRouter } from 'expo-router';
 import { useTranslation } from 'react-i18next';
 import { useLanguageStore } from '../../zustand/store';
 import { useTheme } from '@/app/providers/ThemeProvider';
-import useThemeStore from '../../zustand/themeStore';
+import { useAuthStore } from "@/app/zustand/authStore";
 
-// EyeIcon component
 interface EyeIconProps {
   visible: boolean;
 }
@@ -35,31 +35,58 @@ const EyeIcon: React.FC<EyeIconProps> = ({ visible }) => (
   </Svg>
 );
 
-// Login component
 const Login = () => {
   const { t } = useTranslation();
   const { language } = useLanguageStore();
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const [email, setEmail] = useState<string>('');
   const [password, setPassword] = useState<string>('');
+  const [localError, setLocalError] = useState<string | null>(null);
   const router = useRouter();
   const { theme } = useTheme();
+  const { login, error, isLoading } = useAuthStore();
 
-  const handleSubmit = () => {
-    router.push('/(tabs)');
+  const handleSubmit = async () => {
+    setLocalError(null);
+    
+    if (!email.trim()) {
+      setLocalError(t('emailRequired'));
+      return;
+    }
+    
+    if (!password.trim()) {
+      setLocalError(t('passwordRequired'));
+      return;
+    }
+
+    try {
+      await login(email, password);
+      router.push('/(tabs)');
+    } catch (err) {
+      setLocalError(error || 'Login failed');
+    }
   };
 
-  // Check if the language is RTL (Arabic)
   const isRTL = language === 'ar';
 
   return (
     <View className={`flex h-full ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
       <ScrollView className="flex px-4">
         <View className="mt-24 mb-8">
+          
           <Text className={`text-4xl font-bold text-center ${theme === "dark" ? "text-[#3b82f6]" : "text-blue-600"}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
             {t('login')}
           </Text>
         </View>
+
+        {localError && (
+          <View className="mb-4 p-3 bg-red-100 rounded-lg">
+            <Text className="text-red-600" style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              {localError}
+            </Text>
+          </View>
+        )}
+
         <View className="space-y-4 mb-12 flex gap-10">
           <View>
             <Text className={`font-semibold mb-2 text-lg ${theme === "dark" ? "text-[#e5e5e5]" : "text-black"}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
@@ -85,7 +112,6 @@ const Login = () => {
               className={`bg-[#F5F9FE] rounded-lg px-4 py-5 placeholder:text-[#A0ACBB] ${theme === "dark" ? "bg-[#1e1e1e]" : "bg-[#F5F9FE]"}`}
               textAlign={isRTL ? 'right' : 'left'}
             />
-            {/* Dynamically position the eye icon based on RTL/LTR */}
             <TouchableOpacity
               onPress={() => setPasswordVisible(!passwordVisible)}
               className={`absolute ${isRTL ? 'left-4' : 'right-4'} top-14`}
@@ -93,22 +119,31 @@ const Login = () => {
               <EyeIcon visible={passwordVisible} />
             </TouchableOpacity>
             <TouchableOpacity>
-              <Text className={`text-right text-sm font-light mt-2 ${theme === "dark" ? "text-[#e5e5e5]" : "text-black"}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
+              <Text className={`text-right text-sm font-light mt-2 ${theme === "dark" ? "text-[#e5e5e5]" : "text-black"}`} style={{ textAlign: isRTL ? 'right' : 'left' }}
+              onPress={() => router.push('/auth/forgotpassword')}>
                 {t('forgotPassword')}
               </Text>
             </TouchableOpacity>
           </View>
         </View>
-        <TouchableOpacity onPress={handleSubmit} className={`rounded-2xl py-4 mb-6 ${theme === "dark" ? "bg-[#3b82f6]" : "bg-blue-600"}`}>
-          <Text className="text-white text-center font-semibold text-lg">
-            {t('login')}
-          </Text>
+        <TouchableOpacity 
+          onPress={handleSubmit} 
+          className={`rounded-2xl py-4 mb-6 ${theme === "dark" ? "bg-[#3b82f6]" : "bg-blue-600"}`}
+          disabled={isLoading}
+        >
+          {isLoading ? (
+            <ActivityIndicator color="white" />
+          ) : (
+            <Text className="text-white text-center font-semibold text-lg">
+              {t('login')}
+            </Text>
+          )}
         </TouchableOpacity>
         <View className="flex flex-row justify-center">
           <Text className={`pr-2 ${theme === "dark" ? "text-[#e5e5e5]" : "text-black"}`} style={{ textAlign: isRTL ? 'right' : 'left' }}>
             {t('noAccount')}
           </Text>
-          <TouchableOpacity onPress={() => router.push('/auth/register')}>
+          <TouchableOpacity onPress={() => router.push('/auth/register/register')}>
             <Text className={`text-blue-600 ${theme === "dark" ? "text-[#3b82f6]" : "text-blue-600"}`}>
               {t('signUp')}
             </Text>

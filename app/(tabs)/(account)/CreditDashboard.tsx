@@ -84,7 +84,7 @@ export default function CreditDashboardScreen({ navigation }: any) {
                 shadowRadius: 5,
                 elevation: theme === "dark" ? 0 : 2,
               }}
-              onPress={() => navigation.navigate("CreditSimulator")}
+              onPress={() => router.push("/(tabs)/(account)/CreditSimulator")}
             >
               <View className={`w-12 h-12 rounded-full items-center justify-center mb-2 ${theme === "dark" ? "bg-purple-900/30" : "bg-purple-100"}`}>
                 <MaterialIcons name="calculate" size={22} color={theme === "dark" ? "#c4b5fd" : "#9333ea"} />
@@ -103,7 +103,7 @@ export default function CreditDashboardScreen({ navigation }: any) {
                 shadowRadius: 5,
                 elevation: theme === "dark" ? 0 : 2,
               }}
-              onPress={() => navigation.navigate("RequestCredit")}
+              onPress={() => router.push("/(tabs)/(account)/offers")}
             >
               <View className={`w-12 h-12 rounded-full items-center justify-center mb-2 ${theme === "dark" ? "bg-green-900/30" : "bg-green-100"}`}>
                 <MaterialIcons name="add-circle-outline" size={22} color={theme === "dark" ? "#86efac" : "#16a34a"} />

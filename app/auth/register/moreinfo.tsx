@@ -4,7 +4,6 @@ import { Alert, StatusBar, StyleSheet, Text, TextInput, TouchableOpacity, View }
 import { Dropdown } from 'react-native-element-dropdown';
 import axios from 'axios';
 import  AppContext  from './AppContext';  
-import Rib from '@/app/components/rib';
 
 interface DropdownOption {
   value: string;
@@ -33,14 +32,14 @@ const Moreinfo: React.FC = () => {
   const [countryData, setCountryData] = useState<DropdownOption[]>([]);
   const [stateData, setStateData] = useState<DropdownOption[]>([]);
   const [cityData, setCityData] = useState<DropdownOption[]>([]);
-  const [country, setCountry] = useState<string | null>(null);
-  const [state, setState] = useState<string | null>(null);
-  const [city, setCity] = useState<string | null>(null);
-  const [maritalStatus, setMaritalStatus] = useState<string | null>(null);
-  const [socioProfessionalStatus, setSocioProfessionalStatus] = useState<string | null>(null);
-  const [countryName, setCountryName] = useState<string | null>(null);
-  const [stateName, setStateName] = useState<string | null>(null);
-  const [cityName, setCityName] = useState<string | null>("tunisia");
+  const [country, setCountry] = useState<string | undefined>(undefined);
+  const [state, setState] = useState<string | undefined>(undefined);
+  const [city, setCity] = useState<string | undefined>(undefined);
+  const [maritalStatus, setMaritalStatus] = useState<string | undefined>(undefined);
+  const [socioProfessionalStatus, setSocioProfessionalStatus] = useState<string | undefined>(undefined);
+  const [countryName, setCountryName] = useState<string | undefined>(undefined);
+  const [stateName, setStateName] = useState<string | undefined>(undefined);
+  const [cityName, setCityName] = useState<string>("tunisia");
   const [isFocus, setIsFocus] = useState<boolean>(false);
 
   const { setCurrentStep, setFormData, formData } = useContext(AppContext)!;
@@ -113,7 +112,7 @@ const Moreinfo: React.FC = () => {
       <StatusBar translucent backgroundColor="transparent" barStyle="dark-content" />
       <View style={styles.dropdownContainer} className='flex gap-6'>
         <View className='flex gap-2'>
-          <Rib />
+          
           <Text className='text-lg font-semibold '>Where you leave ?</Text>
           <Dropdown
             style={[styles.dropdown, isFocus && { borderColor: 'blue' }]}
@@ -194,7 +193,6 @@ const Moreinfo: React.FC = () => {
     </View>
   );
 };
-
 export default Moreinfo;
 
 const styles = StyleSheet.create({

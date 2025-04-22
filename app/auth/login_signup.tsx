@@ -12,21 +12,18 @@ import { useTranslation } from 'react-i18next';
 import { useLanguageStore } from '../zustand/store';
 import Slider from '../components/slider';
 import { useTheme } from "../providers/ThemeProvider";
-import useThemeStore  from '../zustand/themeStore';
+
 // Main component
 const HomeScreen: React.FC = () => {
   const { t } = useTranslation();
   const { theme } = useTheme();
-  const toggleTheme = useThemeStore((state) => state.toggleTheme);
+
   return (
     <View className={`flex h-full  ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
      <StatusBar translucent backgroundColor="transparent" barStyle={theme === "dark" ? "light-content" : "dark-content"} />
 
 
       <View className="flex mt-36">
-      <Pressable onPress={toggleTheme} className="mt-4 p-3 bg-blue-500 rounded-lg">
-        <Text className="text-white">Toggle Theme</Text>
-      </Pressable>
         <Slider />
       </View>
       <View className="absolute bottom-10 left-0 right-0 px-4">

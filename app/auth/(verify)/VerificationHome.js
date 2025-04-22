@@ -97,7 +97,7 @@ export default function VerificationHome({ navigation, route }) {
         <TouchableOpacity className="bg-blue-600 rounded-2xl py-5" onPress={handleSubmit}>
           <Text className="text-white text-center font-semibold">Submit</Text>
         </TouchableOpacity>
-        <TouchableOpacity className="bg-white border-blue-500 border-2 rounded-2xl py-5 mt-2">
+        <TouchableOpacity className="bg-white border-blue-500 border-2 rounded-2xl py-5 mt-2" onPress={() => navigation.navigate("(tabs)")}>
           <Text className="text-black text-center font-semibold">Maybe Later</Text>
         </TouchableOpacity>
       </View>

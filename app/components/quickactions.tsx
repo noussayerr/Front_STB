@@ -11,7 +11,7 @@ const Quickactions = () => {
     <View className={`flex-row justify-between px-5 mb-7`}>
       <TouchableOpacity
         className="items-center w-[30%]"
-        onPress={() => router.push('/View/(Carts)')}
+        onPress={() => router.push('/(tabs)/(Carts)/carts')}
       >
         <View
           className="w-[50px] h-[50px] rounded-2xl justify-center items-center mb-2"

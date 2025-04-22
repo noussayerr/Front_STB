@@ -1,16 +1,17 @@
-import { Tabs } from 'expo-router';
-import React, { useState } from 'react';
+import { Tabs, useRouter, usePathname } from 'expo-router';
+import React from 'react';
 import { View, Image, TouchableOpacity, Dimensions } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { Fontisto } from '@expo/vector-icons';
-import { router } from 'expo-router';
 import { useTheme } from "../providers/ThemeProvider"; 
 import Feather from '@expo/vector-icons/Feather';
+
 export default function TabLayout() {
   const { height } = Dimensions.get('window');
   const headerHeight = height * 0.12;
-  const [isNotificationPressed, setIsNotificationPressed] = useState(false);
   const { theme } = useTheme();
+  const router = useRouter();
+  const pathname = usePathname(); // Get current route
 
   return (
     <Tabs
@@ -18,15 +19,14 @@ export default function TabLayout() {
         tabBarStyle: {
           position: 'absolute',
           height: 70,
-          backgroundColor: theme === "dark" ? "#121212" : "white", // Adjust tabBar color based on theme
-          borderColor: 'white',
+          backgroundColor: theme === "dark" ? "#121212" : "white",
           borderTopWidth: 0,
           shadowOpacity: 0,
           elevation: 0,
         },
         headerTitle: '',
         headerStyle: {
-          backgroundColor: theme === "dark" ? "#121212" : "white", // Header background color
+          backgroundColor: theme === "dark" ? "#121212" : "white",
           elevation: 0,
           shadowOpacity: 0,
           borderBottomWidth: 0,
@@ -39,17 +39,28 @@ export default function TabLayout() {
           />
         ),
         headerRight: () => (
-          <View style={{ flexDirection: 'row', alignItems: 'center',  marginRight: 10 }}>
-             <Feather name="settings" size={24} color="white" />
-          </View>
+          <TouchableOpacity onPress={() => router.push("/View/settings")}>
+            <Feather 
+              name="settings" 
+              size={24} 
+              color={
+                pathname === "/settings" 
+                  ? "#2563eb" // Blue when active
+                  : theme === "dark" 
+                    ? "#e5e5e5" // Light gray in dark mode
+                    : "#1f2937" // Dark gray in light mode
+              }
+              style={{ marginRight: 10 }}
+            />
+          </TouchableOpacity>
         ),
       }}
     >
       <Tabs.Screen
-        name="index"
+        name="(Carts)"
         options={{
-          title: 'Wallet',
-          tabBarIcon: ({ color }) => <Fontisto size={28} name="wallet" color={color} />,
+          title: 'Carts',
+          tabBarIcon: ({ color }) => <MaterialCommunityIcons name="wallet" size={28} color={color} />,
         }}
       />
       <Tabs.Screen
@@ -74,6 +85,8 @@ export default function TabLayout() {
           tabBarIcon: ({ color }) => <Fontisto size={28} name="bell" color={color} />,
         }}
       />
+      
+      
     </Tabs>
   );
 }
