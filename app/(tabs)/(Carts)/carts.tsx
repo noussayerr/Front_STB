@@ -22,13 +22,12 @@ export default function CardTypesScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { cardTypes = [], isLoading, error, fetchCardTypes } = useCardStore();
+  const { cardTypes, isLoading, error, fetchCardTypes } = useCardStore();
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
     fetchCardTypes();
   }, []);
-
   const filteredCards = (cardTypes || []).filter((card) =>
     card?.name?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||
     card?.description?.toLowerCase()?.includes(searchQuery.toLowerCase()) ||

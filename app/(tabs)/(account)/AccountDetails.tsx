@@ -160,8 +160,8 @@ export default function AccountDetailsScreen() {
                 Recent Transactions
               </Text>
 
-              {transactions.map((transaction, index) => (
-                <Animated.View key={transaction.id} entering={FadeInDown.delay(index * 100).duration(400)}>
+              {transactions?.map((transaction, index) => (
+                <Animated.View key={transaction.id} >
                   <TouchableOpacity
                     className={`flex-row justify-between items-center py-3 border-b ${theme === "dark" ? "border-gray-800" : "border-gray-100"}`}
                   >

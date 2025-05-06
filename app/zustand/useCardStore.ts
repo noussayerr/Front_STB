@@ -2,8 +2,7 @@ import { create } from 'zustand';
 import axios from 'axios';
 import Constants from 'expo-constants';
 const API_BASE = `https://backend-stb.onrender.com/api/cartroutes`;
-import { useAuthStore } from "./authStore";
-const { token } = useAuthStore();
+
 export interface CardType {
   _id: string;
   name: string;

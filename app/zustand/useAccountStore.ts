@@ -1,29 +1,31 @@
-import { create } from 'zustand'
-import axios from 'axios'
-import Constants from 'expo-constants'
+import { create } from 'zustand';
+import axios from 'axios';
 
-// point this wherever your API actually lives
-const API_BASE = `https://backend-stb.onrender.com/api/accountroutes`
+const API_BASE = `https://backend-stb.onrender.com/api/accountroutes`;
 
 export type AccountType = {
-  id: string
-  name: string
-  description: string
-  features: string[]
-  minDeposit: string       
-  monthlyFee: string
-  icon: string
+  id: string;
+  name: string;
+  description: string;
+  features: string[];
+  minDeposit: string;       
+  monthlyFee: string;
+  icon: string;
 }
 
 interface AccountStoreState {
-  accountTypes: AccountType[]
-  selectedAccount: AccountType | null
-  isLoading: boolean
-  error: string | null
+  accountTypes: AccountType[];
+  selectedAccount: AccountType | null;
+  isLoading: boolean;
+  error: string | null;
+  applicationStatus: 'idle' | 'loading' | 'success' | 'error';
+  applicationError: string | null;
 
-  fetchAccountTypes: () => Promise<void>
-  fetchAccountById: (id: string) => Promise<void>
-  clearSelectedAccount: () => void
+  fetchAccountTypes: () => Promise<void>;
+  fetchAccountById: (id: string) => Promise<void>;
+  clearSelectedAccount: () => void;
+  submitApplication: (data: any) => Promise<{ success: boolean; message: string }>;
+  resetApplicationStatus: () => void;
 }
 
 export const useAccountStore = create<AccountStoreState>((set) => ({
@@ -31,56 +33,38 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
   selectedAccount: null,
   isLoading: false,
   error: null,
+  applicationStatus: 'idle',
+  applicationError: null,
 
   fetchAccountTypes: async () => {
-    set({ isLoading: true, error: null })
+    set({ isLoading: true, error: null });
     try {
-      const { data } = await axios.get<
-        Array<{
-          _id: string
-          name: string
-          description: string
-          features: string[]
-          requirements: { minDeposit: number; minBalance?: number }
-          fees: { monthly: number; transaction?: number; internationalTransfer?: number }
-          icon: string
-        }>
-      >(`${API_BASE}/getaccounttypes`)
-
-      const mapped = data.map((doc) => ({
+      const { data } = await axios.get(`${API_BASE}/getaccounttypes`);
+      
+      const mapped = data.map((doc: any) => ({
         id: doc._id,
         name: doc.name,
         description: doc.description,
         features: doc.features,
         minDeposit: `${doc.requirements.minDeposit} DT`,
-        monthlyFee: doc.fees.monthly > 0
-          ? `${doc.fees.monthly} DT`
-          : 'Free',
+        monthlyFee: doc.fees.monthly > 0 ? `${doc.fees.monthly} DT` : 'Free',
         icon: doc.icon,
-      }))
+      }));
 
-      set({ accountTypes: mapped, isLoading: false })
+      set({ accountTypes: mapped, isLoading: false });
     } catch (err: any) {
       set({
         error: err.response?.data?.message ?? err.message ?? 'Failed to fetch accounts',
         isLoading: false,
-      })
+      });
     }
   },
 
   fetchAccountById: async (id: string) => {
-    set({ isLoading: true, error: null, selectedAccount: null })
+    set({ isLoading: true, error: null, selectedAccount: null });
     try {
-      const { data } = await axios.get<{
-        _id: string
-        name: string
-        description: string
-        features: string[]
-        requirements: { minDeposit: number; minBalance?: number }
-        fees: { monthly: number; transaction?: number; internationalTransfer?: number }
-        icon: string
-      }>(`${API_BASE}/oneaccount/${id}`)
-
+      const { data } = await axios.get(`${API_BASE}/oneaccount/${id}`);
+      
       set({
         selectedAccount: {
           id: data._id,
@@ -88,20 +72,32 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
           description: data.description,
           features: data.features,
           minDeposit: `${data.requirements.minDeposit} DT`,
-          monthlyFee: data.fees.monthly > 0
-            ? `${data.fees.monthly} DT`
-            : 'Free',
+          monthlyFee: data.fees.monthly > 0 ? `${data.fees.monthly} DT` : 'Free',
           icon: data.icon,
         },
         isLoading: false,
-      })
+      });
     } catch (err: any) {
       set({
         error: err.response?.data?.message ?? err.message ?? 'Failed to fetch account',
         isLoading: false,
-      })
+      });
+    }
+  },
+
+  submitApplication: async (data) => {
+    set({ applicationStatus: 'loading', applicationError: null });
+    try {
+      const response = await axios.post(`${API_BASE}/submitapplication`, data);
+      set({ applicationStatus: 'success' });
+      return { success: true, message: response.data.message };
+    } catch (err: any) {
+      const errorMessage = err.response?.data?.message || err.message || 'Failed to submit application';
+      set({ applicationStatus: 'error', applicationError: errorMessage });
+      return { success: false, message: errorMessage };
     }
   },
 
   clearSelectedAccount: () => set({ selectedAccount: null, error: null }),
-}))
+  resetApplicationStatus: () => set({ applicationStatus: 'idle', applicationError: null }),
+}));

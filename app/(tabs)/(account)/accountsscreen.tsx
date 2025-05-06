@@ -13,10 +13,29 @@ export default function AccountTypesScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const { theme } = useTheme();
   const { accountTypes = [], isLoading, error, fetchAccountTypes } = useAccountStore();
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Fetch accounts with async/await
+  const loadAccounts = async () => {
+    try {
+      await fetchAccountTypes();
+    } catch (err) {
+      console.error("Failed to load accounts:", err);
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+
+  // Initial load
   useEffect(() => {
-    fetchAccountTypes();
+    loadAccounts();
   }, []);
+
+  // Pull-to-refresh handler
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    await loadAccounts();
+  };
 
   const filteredAccounts = searchQuery
     ? (accountTypes || []).filter(
@@ -26,7 +45,7 @@ export default function AccountTypesScreen() {
       )
     : accountTypes || [];
 
-  if (isLoading) {
+  if (isLoading && !isRefreshing) {
     return (
       <View className="flex-1 justify-center items-center" style={{ backgroundColor: theme === "dark" ? "#121212" : "#ffffff" }}>
         <ActivityIndicator size="large" color={theme === "dark" ? "#ffffff" : "#000000"} />
@@ -41,7 +60,7 @@ export default function AccountTypesScreen() {
         <Text className={theme === "dark" ? "text-red-400" : "text-red-600"}>Error: {error}</Text>
         <TouchableOpacity 
           className="mt-4 bg-blue-600 px-4 py-2 rounded-lg"
-          onPress={fetchAccountTypes}
+          onPress={loadAccounts}
         >
           <Text className="text-white">Retry</Text>
         </TouchableOpacity>
@@ -73,7 +92,7 @@ export default function AccountTypesScreen() {
         </View>
       </View>
 
-      {/* Account list */}
+      {/* Account list with refresh control */}
       <FlatList
         data={filteredAccounts}
         keyExtractor={(item) => item?.id || Math.random().toString()}
@@ -82,10 +101,11 @@ export default function AccountTypesScreen() {
         ListEmptyComponent={
           <View className="flex-1 justify-center items-center py-10">
             <Text className={theme === "dark" ? "text-gray-400" : "text-gray-600"}>
-              No accounts found
+              {isRefreshing ? "Refreshing..." : "No accounts found"}
             </Text>
           </View>
         }
+        
         renderItem={({ item }) => (
           <Animated.View
             className={`rounded-2xl overflow-hidden border ${theme === "dark" ? "bg-gray-800 border-gray-700" : "bg-white border-gray-100"} shadow-sm`}

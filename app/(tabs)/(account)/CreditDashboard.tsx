@@ -119,9 +119,9 @@ export default function CreditDashboardScreen({ navigation }: any) {
           </Text>
 
           {credits.map((credit, index) => (
-            <Animated.View
+            <View
               key={credit.id}
-              entering={FadeInDown.delay(index * 100).duration(400)}
+              
               className={`rounded-2xl p-5 mb-4 ${theme === "dark" ? "bg-gray-800" : "bg-white border border-gray-100"}`}
               style={{
                 shadowColor: theme === "dark" ? "transparent" : "#000",
@@ -192,7 +192,7 @@ export default function CreditDashboardScreen({ navigation }: any) {
                   </View>
                 </View>
               </TouchableOpacity>
-            </Animated.View>
+            </View>
           ))}
         </View>
       </ScrollView>

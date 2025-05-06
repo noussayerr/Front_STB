@@ -11,7 +11,6 @@ export default function OffersScreen() {
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
   const { credits = [], isLoading, error, fetchCredits } = useCreditStore();
-
   useEffect(() => {
     fetchCredits();
   }, []);

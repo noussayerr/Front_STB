@@ -64,8 +64,7 @@ export default function StatementDownloadScreen({ navigation }: any) {
 
       <ScrollView className="flex mb-20" showsVerticalScrollIndicator={false}>
         <View className="p-5">
-          <Animated.View 
-            entering={FadeInDown.duration(400)} 
+          <View 
             className={`p-5 rounded-xl mb-6 ${theme === "dark" ? "bg-gray-800" : "bg-blue-50"}`}
           >
             <Text className={`text-center mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
@@ -74,7 +73,7 @@ export default function StatementDownloadScreen({ navigation }: any) {
             <Text className={`text-sm text-center ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
               Statements are available in PDF format and can be downloaded for the past 5 years
             </Text>
-          </Animated.View>
+          </View>
 
           <View className="mb-6">
             <Text className={`text-base font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>

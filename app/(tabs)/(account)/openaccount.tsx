@@ -996,9 +996,7 @@ export default function OpenAccountScreen() {
             </View>
           </Animated.View>
         )}
-      </ScrollView>
-
-      <View style={{ 
+        <View style={{ 
         borderTopWidth: 1, 
         borderTopColor: theme === "dark" ? "#374151" : "#E5E7EB", 
         backgroundColor: theme === "dark" ? "#1F2937" : "white",
@@ -1049,6 +1047,9 @@ export default function OpenAccountScreen() {
           </TouchableOpacity>
         </View>
       </View>
+      </ScrollView>
+
+      
     </KeyboardAvoidingView>
   );
 }

@@ -58,7 +58,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
 
       <ScrollView className="flex mb-20" showsVerticalScrollIndicator={false}>
         <View className="p-5">
-          <Animated.View 
+          <View 
             entering={FadeInDown.duration(400)} 
             className={`p-5 rounded-xl mb-6 ${theme === "dark" ? "bg-gray-800" : "bg-blue-50"}`}
           >
@@ -68,7 +68,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
             <Text className={`text-sm text-center ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
               Adjust the sliders below to customize your loan parameters.
             </Text>
-          </Animated.View>
+          </View>
 
           <View className="mb-6">
             <Text className={`text-base font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
@@ -165,8 +165,8 @@ export default function CreditSimulatorScreen({ navigation }: any) {
         }}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
-          <Animated.View 
-            entering={FadeInDown.duration(400)}
+          <View 
+           
             className={`rounded-2xl p-5 mx-5 w-[90%] ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}
             style={{
               shadowColor: "#000",
@@ -252,7 +252,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
                 <Text className={`font-medium ${theme === "dark" ? "text-white" : "text-slate-700"}`}>Close</Text>
               </TouchableOpacity>
             </View>
-          </Animated.View>
+          </View>
         </View>
       </Modal>
     </View>
