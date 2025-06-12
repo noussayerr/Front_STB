@@ -1,28 +1,33 @@
-import * as React from "react"
-import { View, TouchableOpacity, Text, Image, Dimensions, StatusBar, ScrollView } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import Animated, { useSharedValue, useAnimatedStyle, interpolate, Extrapolate } from "react-native-reanimated"
-import Carousel, { type ICarouselInstance, Pagination } from "react-native-reanimated-carousel"
-import { AntDesign } from "@expo/vector-icons"
-import { useRouter } from "expo-router"
-import Transaction from "@/app/components/transaction"
-import Quickactions from "@/app/components/quickactions"
-import { useTranslation } from "react-i18next"
-import { useLanguageStore } from "@/app/zustand/store"
-import { useTheme } from "@/app/providers/ThemeProvider"
+import * as React from "react";
+import { View, TouchableOpacity, Text, Image, Dimensions, StatusBar, ScrollView, ActivityIndicator } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Animated, { useSharedValue, useAnimatedStyle, interpolate, Extrapolate } from "react-native-reanimated";
+import Carousel, { type ICarouselInstance, Pagination } from "react-native-reanimated-carousel";
+import { AntDesign } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
+import Transaction from "@/app/components/transaction";
+import Quickactions from "@/app/components/quickactions";
+import { useTranslation } from "react-i18next";
+import { useLanguageStore } from "@/app/zustand/store";
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { useCardStore } from "@/app/zustand/useCardStore";
 
 export default function HomeScreen() {
-  const { width } = Dimensions.get("window")
-  const insets = useSafeAreaInsets()
-  const progress = useSharedValue<number>(0)
-  const ref = React.useRef<ICarouselInstance>(null)
-  const scrollY = useSharedValue(0)
-  const { t } = useTranslation()
-  const { language } = useLanguageStore()
-  const { theme } = useTheme()
-  const router = useRouter()
+  const { width } = Dimensions.get("window");
+  const insets = useSafeAreaInsets();
+  const progress = useSharedValue<number>(0);
+  const ref = React.useRef<ICarouselInstance>(null);
+  const scrollY = useSharedValue(0);
+  const { t } = useTranslation();
+  const { language } = useLanguageStore();
+  const { theme } = useTheme();
+  const router = useRouter();
+  const { userCards, fetchUserCards, cardsLoading, cardsError } = useCardStore();
 
-  // Animation for the balance card
+  React.useEffect(() => {
+    fetchUserCards();
+  }, []);
+
   const balanceCardStyle = useAnimatedStyle(() => {
     return {
       transform: [
@@ -31,101 +36,79 @@ export default function HomeScreen() {
         },
       ],
       opacity: interpolate(scrollY.value, [0, 100], [1, 0.9], Extrapolate.CLAMP),
-    }
-  })
-  const CARDS = [
-    { 
-      id: "1",
-      image: require("@/assets/carts/CARTESTBTRAVEL.png"),
-      name: "Carte STB Travel",
-      description: "Voyagez serein….",
-      tag: "International",
-      balance: "3,240.50",
-      currency: "DT",
-      expiryDate: "09/26",
-      status: "Active",
-      type: "Debit"
-    },
-    { 
-      id: "2",
-      image: require("@/assets/carts/CarteSTBEpargne.png"), 
-      name: "Carte STB Epargne", 
-      description: "La carte Epargne vous évite le déplacement à l'agence et vous permet de faire face à des dépenses urgentes.",
-      tag: "Savings",
-      balance: "1,890.75",
-      currency: "DT",
-      expiryDate: "05/25",
-      status: "Active",
-      type: "Debit"
-    },
-    { 
-      id: "3", 
-      image: require("@/assets/carts/CARTEVISAELECTRONNATIONALE.png"), 
-      name: "Carte Visa Electron Nationale", 
-      description: "Vous êtes résidents en Tunisie et vous cherchez un moyen de paiement et de retrait qui vous convient ?….",
-      tag: "National",
-      balance: "5,120.00",
-      currency: "DT",
-      expiryDate: "12/24",
-      status: "Active",
-      type: "Debit"
-    },
-    { 
-      id: "4", 
-      image: require("@/assets/carts/CARTECIB3.png"),
-      name: "Carte CIB3", 
-      description: "Vous souhaitez une solution de paiement et de retrait pratique et moderne ?",
-      tag: "Premium",
-      balance: "8,750.30",
-      currency: "DT",
-      expiryDate: "03/27",
-      status: "Active",
-      type: "Credit"
-    },
-    { 
-      id: "5",
-      image: require("@/assets/carts/CarteCCash.png"), 
-      name: "Carte C Cash", 
-      description: "Plus besoin d'un compte bancaire pour avoir une carte",
-      tag: "Prepaid",
-      balance: "1,200.00",
-      currency: "DT",
-      expiryDate: "08/25",
-      status: "Active",
-      type: "Prepaid"
-    },
-    { 
-      id: "6", 
-      image: require("@/assets/carts/CarteCPay.png"), 
-      name: "Carte C Pay", 
-      description: "A convenient payment card for online transactions.",
-      tag: "Business",
-      balance: "15,000.00",
-      currency: "DT",
-      expiryDate: "11/26",
-      status: "Active",
-      type: "Business"
-    },
-  ];
+    };
+  });
+
   const onPressPagination = (index: number) => {
-    ref.current?.scrollTo({ count: index, animated: true })
-  }
+    ref.current?.scrollTo({ count: index, animated: true });
+  };
 
   const handleScroll = (event: any) => {
-    scrollY.value = event.nativeEvent.contentOffset.y
-  }
+    scrollY.value = event.nativeEvent.contentOffset.y;
+  };
 
   const handleCardPress = (cardId: string) => {
-    const selectedCard = CARDS.find(card => card.id === cardId);
-    if (selectedCard) {
-      router.push({
-        pathname: '/(tabs)/(Carts)/carddetails',
-        params: { 
-          cardId: selectedCard.id,
-          cardData: JSON.stringify(selectedCard) 
-        }
-      });
+    router.push({
+      pathname: "/(tabs)/(Carts)/carddetails",
+      params: { cardId },
+    });
+  };
+
+  const getCardImage = (cardTypeName: string) => {
+    switch (cardTypeName.toLowerCase()) {
+      case "travel":
+        return require("@/assets/carts/CARTESTBTRAVEL.png");
+      case "epargne":
+        return require("@/assets/carts/CarteSTBEpargne.png");
+      case "visa electron":
+        return require("@/assets/carts/CARTEVISAELECTRONNATIONALE.png");
+      case "cib3":
+        return require("@/assets/carts/CARTECIB3.png");
+      case "c cash":
+        return require("@/assets/carts/CarteCCash.png");
+      case "c pay":
+        return require("@/assets/carts/CarteCPay.png");
+      default:
+        return require("@/assets/carts/CarteCCash.png");
     }
+  };
+
+  if (cardsLoading) {
+    return (
+      <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <ActivityIndicator size="large" color={theme === "dark" ? "#fff" : "#000"} />
+      </View>
+    );
+  }
+
+  if (cardsError) {
+    return (
+      <View className={`flex-1 justify-center items-center p-4 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <Text className={theme === "dark" ? "text-red-400" : "text-red-600"}>Error: {cardsError}</Text>
+        <TouchableOpacity
+          className={`mt-4 px-4 py-2 rounded-lg ${theme === "dark" ? "bg-blue-800" : "bg-blue-100"}`}
+          onPress={fetchUserCards}
+        >
+          <Text className={theme === "dark" ? "text-white" : "text-blue-800"}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  if (!userCards || userCards.length === 0) {
+    return (
+      <View className={`flex-1 justify-center items-center p-4 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <Text className={`text-lg mb-4 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
+          You don't have any cards yet
+        </Text>
+        <TouchableOpacity
+          className={`px-4 py-2 rounded-lg ${theme === "dark" ? "bg-blue-800" : "bg-blue-600"}`}
+          onPress={() => router.push("/(tabs)/(Carts)/getmycard")}
+        >
+          <Text className="text-white">Apply for a card</Text>
+        </TouchableOpacity>
+      </View>
+    );
   }
 
   return (
@@ -162,47 +145,55 @@ export default function HomeScreen() {
               {t("balance")}
             </Text>
             <Text className={`font-semibold mb-2 text-lg ${theme === "dark" ? "text-white" : "text-white"}`}>
-              5,280.00 DT
+              {userCards.reduce((total, card) => total + (card.currentBalance || 0), 0).toFixed(2)} DT
             </Text>
           </View>
         </Animated.View>
 
-        {/* My Cards Section */}
         <View className="flex-row justify-between items-center px-5 mb-2.5 mt-5">
           <Text className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-            {t("My Cards")}
+            {t("My Cards")} ({userCards.length})
           </Text>
         </View>
 
-        {/* Cards Carousel */}
         <View className="items-center mb-5">
           <Carousel
             ref={ref}
             width={width - 40}
             height={200}
-            loop
+            loop={false}
             onProgressChange={progress}
-            data={CARDS}
+            data={userCards}
             renderItem={({ item, index }) => (
               <TouchableOpacity
-                  activeOpacity={0.9}
-                  onPress={() => handleCardPress(item.id)}
-                >
-                <Image
-                  source={item.image}
-                  style={{
-                    width: "95%",
-                    height: 200,
-                    borderRadius: 16,
-                  }}
-                  resizeMode="contain"
-                />
+                activeOpacity={0.9}
+                onPress={() => handleCardPress(item._id)}
+              >
+                <View className="relative">
+                  <Image
+                    source={getCardImage(item.cardType?.name || "")}
+                    style={{
+                      width: "95%",
+                      height: 200,
+                      borderRadius: 16,
+                      opacity: item.status === "blocked" ? 0.6 : 1,
+                    }}
+                    resizeMode="contain"
+                  />
+                  {item.status === "blocked" && (
+                    <View className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center">
+                      <View className="bg-black/50 px-3 py-1 rounded-full">
+                        <Text className="text-white font-bold">BLOCKED</Text>
+                      </View>
+                    </View>
+                  )}
+                </View>
               </TouchableOpacity>
             )}
           />
           <Pagination.Basic
             progress={progress}
-            data={CARDS}
+            data={userCards ?? []} // Fallback to empty array
             dotStyle={{
               width: 25,
               height: 4,
@@ -224,7 +215,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Special Offers Banner */}
         <TouchableOpacity className="mx-5 mb-5 rounded-xl overflow-hidden" onPress={() => router.push("/View/pack")}>
           <View className={`p-4 ${theme === "dark" ? "bg-gray-900" : "bg-blue-50"}`}>
             <View className="flex-row justify-between items-center">
@@ -252,5 +242,5 @@ export default function HomeScreen() {
         <Transaction />
       </ScrollView>
     </View>
-  )
+  );
 }

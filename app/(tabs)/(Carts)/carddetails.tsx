@@ -1,116 +1,164 @@
 import * as React from "react"
-import { View, Text, TouchableOpacity, ScrollView, StatusBar, Image, Linking } from "react-native"
+import { 
+  View, 
+  Text, 
+  TouchableOpacity, 
+  ScrollView, 
+  StatusBar, 
+  Image, 
+  Linking,
+  Modal,
+  TextInput,
+  ActivityIndicator,
+  Alert 
+} from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { AntDesign, Feather, Ionicons, MaterialIcons } from "@expo/vector-icons"
 import { useLocalSearchParams, useRouter } from "expo-router"
-
 import { useTheme } from '@/app/providers/ThemeProvider';
 import Transaction from "@/app/components/transaction"
-const ALL_CARDS = [
-  { 
-    id: "1",
-    image: require("@/assets/carts/CARTESTBTRAVEL.png"),
-    name: "Carte STB Travel",
-    description: "Voyagez serein….",
-    tag: "International",
-    balance: "3,240.50",
-    currency: "DT",
-    expiryDate: "09/26",
-    status: "Active",
-    type: "Debit",
-    cardNumber: "•••• •••• •••• 7890"
-  },
-  {id: "2",
-  image: require("@/assets/carts/CarteSTBEpargne.png"), 
-  name: "Carte STB Epargne", 
-  description: "La carte Epargne vous évite le déplacement à l'agence et vous permet de faire face à des dépenses urgentes.",
-  tag: "Savings",
-  balance: "1,890.75",
-  currency: "DT",
-  expiryDate: "05/25",
-  status: "Active",
-  type: "Debit",
-  cardNumber: "•••• •••• •••• 4567"
-},
-{ 
-  id: "3", 
-  image: require("@/assets/carts/CARTEVISAELECTRONNATIONALE.png"), 
-  name: "Carte Visa Electron Nationale", 
-  description: "Vous êtes résidents en Tunisie et vous cherchez un moyen de paiement et de retrait qui vous convient ?….",
-  tag: "National",
-  balance: "5,120.00",
-  currency: "DT",
-  expiryDate: "12/24",
-  status: "Active",
-  type: "Debit",
-  cardNumber: "•••• •••• •••• 1234"
-},
-{ 
-  id: "4", 
-  image: require("@/assets/carts/CARTECIB3.png"),
-  name: "Carte CIB3", 
-  description: "Vous souhaitez une solution de paiement et de retrait pratique et moderne ?",
-  tag: "Premium",
-  balance: "8,750.30",
-  currency: "DT",
-  expiryDate: "03/27",
-  status: "Active",
-  type: "Credit",
-  cardNumber: "•••• •••• •••• 5678"
-},
-{ 
-  id: "5",
-  image: require("@/assets/carts/CarteCCash.png"), 
-  name: "Carte C Cash", 
-  description: "Plus besoin d'un compte bancaire pour avoir une carte",
-  tag: "Prepaid",
-  balance: "1,200.00",
-  currency: "DT",
-  expiryDate: "08/25",
-  status: "Active",
-  type: "Prepaid",
-  cardNumber: "•••• •••• •••• 3456"
-},
-{ 
-  id: "6", 
-  image: require("@/assets/carts/CarteCPay.png"), 
-  name: "Carte C Pay", 
-  description: "A convenient payment card for online transactions.",
-  tag: "Business",
-  balance: "15,000.00",
-  currency: "DT",
-  expiryDate: "11/26",
-  status: "Active",
-  type: "Business",
-  cardNumber: "•••• •••• •••• 9012"
-}
-]
+import { useCardStore } from "@/app/zustand/useCardStore"
 
 export default function CardDetailsScreen() {
   const router = useRouter()
-  const { cardId, cardData } = useLocalSearchParams<{ cardId: string, cardData: string }>()
+  const { cardId } = useLocalSearchParams<{ cardId: string }>()
   const insets = useSafeAreaInsets()
   const { theme } = useTheme()
   const [activeTab, setActiveTab] = React.useState("transactions")
-  
-  // Find the card either from params or from ALL_CARDS
-  const currentCard = cardData 
-    ? JSON.parse(cardData) 
-    : ALL_CARDS.find(card => card.id === cardId) || ALL_CARDS[0]
+  const [pinModalVisible, setPinModalVisible] = React.useState(false)
+  const [currentPin, setCurrentPin] = React.useState('')
+  const [newPin, setNewPin] = React.useState('')
+  const [confirmPin, setConfirmPin] = React.useState('')
+  const [isChangingPin, setIsChangingPin] = React.useState(false)
 
-  const handleBlockCard = () => {
-    console.log("Blocking card:", currentCard.id)
+  const { 
+    currentCard, 
+    isLoading, 
+    error, 
+    fetchCardDetails, 
+    clearCurrentCard,
+    toggleBlockCard,
+    changeCardPin
+  } = useCardStore()
+
+  React.useEffect(() => {
+    if (cardId) fetchCardDetails(cardId)
+    return () => clearCurrentCard()
+  }, [cardId])
+
+  const handleBlockCard = async () => {
+    if (!currentCard) return
+    
+    const { success, message } = await toggleBlockCard(currentCard._id)
+    if (success) {
+      Alert.alert(
+        'Success', 
+        `Card has been ${currentCard.status === 'active' ? 'blocked' : 'unblocked'}`
+      )
+    } else {
+      Alert.alert('Error', message)
+    }
+  }
+
+  const handleChangePin = async () => {
+    if (!currentCard) return
+    
+    if (newPin.length !== 6 || confirmPin.length !== 6) {
+      Alert.alert('Error', 'PIN must be 6 digits')
+      return
+    }
+    
+    if (newPin !== confirmPin) {
+      Alert.alert('Error', 'New PIN and confirmation do not match')
+      return
+    }
+    
+    setIsChangingPin(true)
+    const { success, message } = await changeCardPin(currentCard._id, newPin)
+    setIsChangingPin(false)
+    
+    if (success) {
+      Alert.alert('Success', 'PIN changed successfully')
+      setPinModalVisible(false)
+      setCurrentPin('')
+      setNewPin('')
+      setConfirmPin('')
+    } else {
+      Alert.alert('Error', message)
+    }
   }
 
   const handleCallSupport = () => {
     Linking.openURL("tel:+21670555123")
   }
 
+  const getCardImage = () => {
+    if (!currentCard?.cardType) return require('@/assets/carts/CarteCCash.png')
+    
+    switch(currentCard.cardType.name.toLowerCase()) {
+      case 'travel':
+        return require("@/assets/carts/CARTESTBTRAVEL.png")
+      case 'epargne':
+        return require("@/assets/carts/CarteSTBEpargne.png")
+      case 'visa electron':
+        return require("@/assets/carts/CARTEVISAELECTRONNATIONALE.png")
+      case 'cib3':
+        return require("@/assets/carts/CARTECIB3.png")
+      case 'c cash':
+        return require("@/assets/carts/CarteCCash.png")
+      case 'c pay':
+        return require("@/assets/carts/CarteCPay.png")
+      default:
+        return require("@/assets/carts/CarteCCash.png")
+    }
+  }
+
+  const formatCardNumber = (number: string) => {
+    if (!number) return '•••• •••• •••• ••••'
+    const last4 = number.slice(-4)
+    return `•••• •••• •••• ${last4}`
+  }
+
+  const formatExpiryDate = (date: string | Date) => {
+    if (!date) return '••/••'
+    const d = new Date(date)
+    return `${String(d.getMonth() + 1).padStart(2, '0')}/${String(d.getFullYear()).slice(-2)}`
+  }
+
+  if (isLoading) {
+    return (
+      <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <ActivityIndicator size="large" color={theme === "dark" ? "#fff" : "#000"} />
+      </View>
+    )
+  }
+
+  if (error) {
+    return (
+      <View className={`flex-1 justify-center items-center p-4 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <Text className={theme === "dark" ? "text-red-400" : "text-red-600"}>Error: {error}</Text>
+        <TouchableOpacity 
+          className={`mt-4 px-4 py-2 rounded-lg ${theme === "dark" ? "bg-blue-800" : "bg-blue-100"}`}
+          onPress={() => fetchCardDetails(cardId!)}
+        >
+          <Text className={theme === "dark" ? "text-white" : "text-blue-800"}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    )
+  }
+
+  if (!currentCard) {
+    return (
+      <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <Text className={theme === "dark" ? "text-red-400" : "text-red-500"}>Card not found!</Text>
+      </View>
+    )
+  }
+
   return (
     <View style={{
       flex: 1,
       backgroundColor: theme === "dark" ? "#121212" : "white",
-
     }}>
       <StatusBar
         barStyle={theme === "dark" ? "light-content" : "dark-content"}
@@ -123,7 +171,7 @@ export default function CardDetailsScreen() {
           <AntDesign name="left" size={24} color={theme === "dark" ? "white" : "black"} />
         </TouchableOpacity>
         <Text className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-black"}`}>
-          {currentCard.name}
+          {currentCard.cardType?.name || 'Bank Card'}
         </Text>
       </View>
 
@@ -131,15 +179,24 @@ export default function CardDetailsScreen() {
         {/* Card Display */}
         <View className="px-4 items-center mb-6">
           <Image
-            source={currentCard.image}
+            source={getCardImage()}
             style={{
               width: "100%",
               height: 220,
               borderRadius: 16,
               marginBottom: 16,
+              opacity: currentCard.status === 'blocked' ? 0.6 : 1
             }}
             resizeMode="contain"
           />
+
+          {currentCard.status === 'blocked' && (
+            <View className="absolute top-0 left-0 right-0 bottom-0 justify-center items-center">
+              <View className="bg-black/50 px-4 py-2 rounded-full">
+                <Text className="text-white font-bold">BLOCKED</Text>
+              </View>
+            </View>
+          )}
 
           {/* Card Info Section */}
           <View className={`w-full rounded-xl p-4 ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
@@ -147,52 +204,62 @@ export default function CardDetailsScreen() {
               <Text className={`text-base ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
                 Available Balance
               </Text>
-              <View className={`px-3 py-1 rounded-full ${theme === "dark" ? "bg-green-900/30" : "bg-green-100"}`}>
-                <Text className={`text-xs font-medium ${theme === "dark" ? "text-green-400" : "text-green-600"}`}>
-                  {currentCard.status}
+              <View className={`px-3 py-1 rounded-full ${
+                currentCard.status === 'active' ? 
+                  (theme === "dark" ? "bg-green-900/30" : "bg-green-100") : 
+                  (theme === "dark" ? "bg-red-900/30" : "bg-red-100")
+              }`}>
+                <Text className={`text-xs font-medium ${
+                  currentCard.status === 'active' ? 
+                    (theme === "dark" ? "text-green-400" : "text-green-600") : 
+                    (theme === "dark" ? "text-red-400" : "text-red-600")
+                }`}>
+                  {currentCard.status?.toUpperCase()}
                 </Text>
               </View>
             </View>
 
             <Text className={`text-3xl font-bold mb-1 ${theme === "dark" ? "text-white" : "text-black"}`}>
-              {currentCard.balance} {currentCard.currency}
+              {currentCard.currentBalance?.toFixed(2) || '0.00'} DT
             </Text>
 
             <Text className={`${theme === "dark" ? "text-gray-400" : "text-gray-500"} mb-4`}>
-              {currentCard.cardNumber}
+              {formatCardNumber(currentCard.cardNumber)}
             </Text>
 
             <View className="flex-row justify-between mt-4">
               <View>
                 <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>CARD TYPE</Text>
                 <Text className={`font-medium ${theme === "dark" ? "text-white" : "text-black"}`}>
-                  {currentCard.type}
+                  {currentCard.cardType?.type || 'Debit'}
                 </Text>
               </View>
               <View>
                 <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>EXPIRES</Text>
                 <Text className={`font-medium ${theme === "dark" ? "text-white" : "text-black"}`}>
-                  {currentCard.expiryDate}
+                  {formatExpiryDate(currentCard.expiryDate)}
                 </Text>
               </View>
               <View>
                 <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>CATEGORY</Text>
                 <Text className={`font-medium ${theme === "dark" ? "text-white" : "text-black"}`}>
-                  {currentCard.tag}
+                  {currentCard.cardType?.tag || 'Card'}
                 </Text>
               </View>
             </View>
           </View>
 
           {/* Card Description */}
-          <View className={`w-full mt-4 p-4 rounded-xl ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
-            <Text className={`font-medium mb-2 ${theme === "dark" ? "text-white" : "text-black"}`}>
-              About this card
-            </Text>
-            <Text className={`${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-              {currentCard.description}
-            </Text>
-          </View>
+          {currentCard.cardType?.description && (
+            <View className={`w-full mt-4 p-4 rounded-xl ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}>
+              <Text className={`font-medium mb-2 ${theme === "dark" ? "text-white" : "text-black"}`}>
+                About this card
+              </Text>
+              <Text className={`${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
+                {currentCard.cardType.description}
+              </Text>
+            </View>
+          )}
 
           {/* Tabs Navigation */}
           <View className="flex-row w-full mt-6 mb-4">
@@ -254,7 +321,7 @@ export default function CardDetailsScreen() {
         {/* Tab Content */}
         {activeTab === "transactions" && (
           <View className="pb-8 px-4">
-            <Transaction  />
+            <Transaction />
           </View>
         )}
 
@@ -264,7 +331,7 @@ export default function CardDetailsScreen() {
               {/* Card Management Options */}
               <TouchableOpacity
                 className={`flex-row items-center p-4 rounded-xl ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
-                //onPress={() => router.push(`/(tabs)/carddetails/pin?cardId=${currentCard.id}`)}
+                onPress={() => setPinModalVisible(true)}
               >
                 <Ionicons
                   name="lock-closed"
@@ -285,7 +352,7 @@ export default function CardDetailsScreen() {
 
               <TouchableOpacity
                 className={`flex-row items-center p-4 rounded-xl ${theme === "dark" ? "bg-gray-900" : "bg-gray-50"}`}
-                //onPress={() => router.push(`/(tabs)/carddetails/limits?cardId=${currentCard.id}`)}
+                onPress={() => router.push(`/(tabs)/(Carts)/limits?cardId=${currentCard._id}`)}
               >
                 <MaterialIcons
                   name="speed"
@@ -332,21 +399,39 @@ export default function CardDetailsScreen() {
                 </Text>
                 
                 <TouchableOpacity
-                  className={`flex-row items-center p-4 rounded-xl ${theme === "dark" ? "bg-red-900/20" : "bg-red-50"}`}
+                  className={`flex-row items-center p-4 rounded-xl ${
+                    theme === "dark" ? 
+                      (currentCard.status === 'active' ? "bg-red-900/20" : "bg-green-900/20") : 
+                      (currentCard.status === 'active' ? "bg-red-50" : "bg-green-50")
+                  }`}
                   onPress={handleBlockCard}
                 >
                   <Ionicons
-                    name="close-circle"
+                    name={currentCard.status === 'active' ? "close-circle" : "checkmark-circle"}
                     size={24}
-                    color={theme === "dark" ? "#f87171" : "#dc2626"}
+                    color={
+                      theme === "dark" ? 
+                        (currentCard.status === 'active' ? "#f87171" : "#4ade80") : 
+                        (currentCard.status === 'active' ? "#dc2626" : "#16a34a")
+                    }
                     style={{ marginRight: 12 }}
                   />
                   <View className="flex-1">
-                    <Text className={`font-medium ${theme === "dark" ? "text-red-400" : "text-red-600"}`}>
-                      Block Card Temporarily
+                    <Text className={`font-medium ${
+                      theme === "dark" ? 
+                        (currentCard.status === 'active' ? "text-red-400" : "text-green-400") : 
+                        (currentCard.status === 'active' ? "text-red-600" : "text-green-600")
+                    }`}>
+                      {currentCard.status === 'active' ? 'Block Card' : 'Unblock Card'}
                     </Text>
-                    <Text className={`text-sm ${theme === "dark" ? "text-red-400/70" : "text-red-500/70"}`}>
-                      Prevent new transactions with this card
+                    <Text className={`text-sm ${
+                      theme === "dark" ? 
+                        (currentCard.status === 'active' ? "text-red-400/70" : "text-green-400/70") : 
+                        (currentCard.status === 'active' ? "text-red-500/70" : "text-green-500/70")
+                    }`}>
+                      {currentCard.status === 'active' ? 
+                        'Prevent new transactions with this card' : 
+                        'Reactivate this card for transactions'}
                     </Text>
                   </View>
                   <View
@@ -366,6 +451,80 @@ export default function CardDetailsScreen() {
           </View>
         )}
       </ScrollView>
+
+      {/* PIN Change Modal */}
+      <Modal
+        animationType="slide"
+        transparent={true}
+        visible={pinModalVisible}
+        onRequestClose={() => setPinModalVisible(false)}
+      >
+        <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-black/70" : "bg-black/50"}`}>
+          <View className={`w-11/12 p-6 rounded-xl ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}>
+            <Text className={`text-xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-black"}`}>
+              Change PIN
+            </Text>
+            
+            <Text className={`mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Current PIN</Text>
+            <TextInput
+              className={`p-3 mb-4 rounded-lg border ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-black"}`}
+              placeholder="Enter current PIN"
+              placeholderTextColor={theme === "dark" ? "#9CA3AF" : "#6B7280"}
+              secureTextEntry
+              keyboardType="numeric"
+              maxLength={6}
+              value={currentPin}
+              onChangeText={setCurrentPin}
+            />
+            
+            <Text className={`mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>New PIN (6 digits)</Text>
+            <TextInput
+              className={`p-3 mb-4 rounded-lg border ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-black"}`}
+              placeholder="Enter new PIN"
+              placeholderTextColor={theme === "dark" ? "#9CA3AF" : "#6B7280"}
+              secureTextEntry
+              keyboardType="numeric"
+              maxLength={6}
+              value={newPin}
+              onChangeText={setNewPin}
+            />
+            
+            <Text className={`mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>Confirm New PIN</Text>
+            <TextInput
+              className={`p-3 mb-6 rounded-lg border ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-white border-gray-300 text-black"}`}
+              placeholder="Confirm new PIN"
+              placeholderTextColor={theme === "dark" ? "#9CA3AF" : "#6B7280"}
+              secureTextEntry
+              keyboardType="numeric"
+              maxLength={6}
+              value={confirmPin}
+              onChangeText={setConfirmPin}
+            />
+            
+            <View className="flex-row justify-between">
+              <TouchableOpacity
+                className={`px-4 py-2 rounded-lg ${theme === "dark" ? "bg-gray-700" : "bg-gray-200"}`}
+                onPress={() => setPinModalVisible(false)}
+                disabled={isChangingPin}
+              >
+                <Text className={theme === "dark" ? "text-white" : "text-black"}>Cancel</Text>
+              </TouchableOpacity>
+              
+              <TouchableOpacity
+                className={`px-4 py-2 rounded-lg bg-blue-600`}
+                onPress={handleChangePin}
+                disabled={isChangingPin || !currentPin || !newPin || !confirmPin}
+              >
+                {isChangingPin ? (
+                  <ActivityIndicator color="white" />
+                ) : (
+                  <Text className="text-white">Change PIN</Text>
+                )}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   )
 }

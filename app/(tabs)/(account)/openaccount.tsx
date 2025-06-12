@@ -14,18 +14,21 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import Animated from "react-native-reanimated";
+import { useAccountStore } from "@/app/zustand/useAccountStore";
 import { Picker } from "@react-native-picker/picker";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/app/providers/ThemeProvider";
 
 export default function OpenAccountScreen() {
-  const { accoutid } = useLocalSearchParams<{ accoutid: string }>();
+  const { accountid } = useLocalSearchParams<{ accountid: string }>(); // Fixed typo in param name
+  console.log(accountid)
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [currentStep, setCurrentStep] = useState(1);
   const { theme } = useTheme();
-  
+  const { submitApplication, accountTypes } = useAccountStore(); // Get accountTypes from store
+
   // Form data state
   const [formData, setFormData] = useState({
     // Personal Information
@@ -40,7 +43,7 @@ export default function OpenAccountScreen() {
     idNumber: "",
 
     // Account Information
-    accountType: accoutid || "1",
+    accountType: accountid || "", // Use the accountid from params
     initialDeposit: "",
     wantsDebitCard: false,
     wantsOnlineBanking: false,
@@ -55,19 +58,8 @@ export default function OpenAccountScreen() {
     termsAgreed: false,
   });
 
-  // Account types data for reference
-  const accountTypes = [
-    { id: "1", name: "Current Account" },
-    { id: "2", name: "Savings Account" },
-    { id: "3", name: "Student Account" },
-    { id: "4", name: "Business Account" },
-    { id: "5", name: "Joint Account" },
-    { id: "6", name: "Foreign Currency Account" },
-  ];
-
-  // Find selected account
-  const selectedAccount = accountTypes.find((account) => account.id === accoutid);
-
+  // Find selected account from the store
+  const selectedAccount = accountTypes.find((account) => account.id === accountid);
   // Update form data
   const updateFormData = (field: keyof typeof formData, value: any) => {
     setFormData((prev) => ({
@@ -77,25 +69,36 @@ export default function OpenAccountScreen() {
   };
 
   // Handle form submission
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
+    if (!validateStep()) return;
+    
     setIsSubmitting(true);
-
-    // Simulate API call
-    setTimeout(() => {
-      setIsSubmitting(false);
+    
+    try {
+      // Submit the form data with the account type
+      await submitApplication({
+        ...formData,
+      });
+      
       Alert.alert(
         "Application Submitted",
         "Your account application has been successfully submitted. We will review your application and contact you soon.",
         [
           {
             text: "OK",
-            onPress: () => router.push("/"),
+            onPress: () => router.push("/(tabs)/(account)"),
           },
         ]
       );
-    }, 2000);
+    } catch (error) {
+      Alert.alert(
+        "Error",
+        "There was an error submitting your application. Please try again."
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
   // Validate current step
   const validateStep = () => {
     if (currentStep === 1) {
@@ -119,18 +122,24 @@ export default function OpenAccountScreen() {
         Alert.alert("Missing Information", "Please select your employment status.");
         return false;
       }
+    } else if (currentStep === 4) {
+      if (!formData.termsAgreed) {
+        Alert.alert("Agreement Required", "You must agree to the terms and conditions.");
+        return false;
+      }
     }
 
     return true;
   };
+
   const handleNextStep = () => {
-    
+    if (validateStep()) {
       if (currentStep < 4) {
         setCurrentStep(currentStep + 1);
       } else {
         handleSubmit();
       }
-    
+    }
   };
 
   // Handle previous step

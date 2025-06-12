@@ -1,18 +1,23 @@
 import * as React from "react"
-import { View, Text, TouchableOpacity, ScrollView, StatusBar } from "react-native"
+import { View, Text, TouchableOpacity, ScrollView, StatusBar, ActivityIndicator } from "react-native"
 import { useSafeAreaInsets } from "react-native-safe-area-context"
 import { AntDesign, MaterialIcons, Feather, Ionicons } from "@expo/vector-icons"
 import Animated, { FadeInDown } from "react-native-reanimated"
 import { useLocalSearchParams, useRouter } from 'expo-router'
 import { useTheme } from "@/app/providers/ThemeProvider"
+import { useAccountStore } from "@/app/zustand/useAccountStore"
 
 export default function AccountDetailsScreen() {
   const router = useRouter()
   const params = useLocalSearchParams()
-  const account = JSON.parse(params.account as string)
-  const insets = useSafeAreaInsets()
   const { theme } = useTheme()
   const [activeTab, setActiveTab] = React.useState("transactions")
+  const insets = useSafeAreaInsets()
+  const { accounts, isLoading } = useAccountStore()
+
+  // Parse the account from params or find it in the store
+  const accountFromParams = params.account ? JSON.parse(params.account as string) : null;
+  const account = accountFromParams || accounts.find(acc => acc.id === params.id);
 
   const transactions = [
     {
@@ -60,9 +65,18 @@ export default function AccountDetailsScreen() {
   ]
 
   const getAccountColor = () => {
+    if (!account) return "#2563eb";
     if (account.type === "current") return "#2563eb"
     if (account.type === "savings") return "#16a34a"
     return "#9333ea"
+  }
+
+  if (isLoading || !account) {
+    return (
+      <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <ActivityIndicator size="large" color={theme === "dark" ? "#fff" : "#000"} />
+      </View>
+    );
   }
 
   return (
@@ -100,8 +114,8 @@ export default function AccountDetailsScreen() {
           >
             <View className="flex-row justify-between items-center mb-4">
               <View>
-                <Text className="text-white text-lg font-bold">{account.name}</Text>
-                <Text className="text-white/80 text-sm">{account.number}</Text>
+                <Text className="text-white text-lg font-bold">{account.accountType.name}</Text>
+                <Text className="text-white/80 text-sm">{account.accountNumber}</Text>
               </View>
               <MaterialIcons
                 name={
@@ -115,7 +129,7 @@ export default function AccountDetailsScreen() {
             <View>
               <Text className="text-white/80 text-sm">Available Balance</Text>
               <Text className="text-white text-3xl font-bold mt-1">
-                {account.balance} {account.currency}
+                {account.balance.toFixed(2)} {account.currency}
               </Text>
             </View>
           </View>

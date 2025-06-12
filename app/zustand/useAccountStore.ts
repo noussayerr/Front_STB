@@ -13,6 +13,21 @@ export type AccountType = {
   icon: string;
 }
 
+export type Account = {
+  id: string;
+  accountNumber: string;
+  balance: number;
+  currency: string;
+  type: string;
+  accountType: {
+    name: string;
+    description: string;
+    icon?: string;
+  };
+  status: string;
+};
+
+
 interface AccountStoreState {
   accountTypes: AccountType[];
   selectedAccount: AccountType | null;
@@ -20,7 +35,8 @@ interface AccountStoreState {
   error: string | null;
   applicationStatus: 'idle' | 'loading' | 'success' | 'error';
   applicationError: string | null;
-
+  accounts: Account[];
+  fetchUserAccounts: () => Promise<void>;
   fetchAccountTypes: () => Promise<void>;
   fetchAccountById: (id: string) => Promise<void>;
   clearSelectedAccount: () => void;
@@ -35,7 +51,7 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
   error: null,
   applicationStatus: 'idle',
   applicationError: null,
-
+  accounts: [],
   fetchAccountTypes: async () => {
     set({ isLoading: true, error: null });
     try {
@@ -59,7 +75,35 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
       });
     }
   },
+  fetchUserAccounts: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const { data } = await axios.get(`http://localhost:5000/api/accountroutes/myaccounts`, {
+       headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+      });
 
+      const mappedAccounts = data.data.map((account: any) => ({
+        id: account._id,
+        accountNumber: account.accountNumber,
+        balance: account.balance,
+        currency: 'DT', // Assuming Tunisian Dinar
+        type: account.accountType?.name.toLowerCase() || 'current',
+        accountType: {
+          name: account.accountType?.name || 'Bank Account',
+          description: account.accountType?.description || '',
+          icon: account.accountType?.icon
+        },
+        status: account.status
+      }));
+
+      set({ accounts: mappedAccounts, isLoading: false });
+    } catch (err: any) {
+      set({
+        error: err.response?.data?.message ?? err.message ?? 'Failed to fetch user accounts',
+        isLoading: false,
+      });
+    }
+  },
   fetchAccountById: async (id: string) => {
     set({ isLoading: true, error: null, selectedAccount: null });
     try {
@@ -88,7 +132,7 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
   submitApplication: async (data) => {
     set({ applicationStatus: 'loading', applicationError: null });
     try {
-      const response = await axios.post(`${API_BASE}/submitapplication`, data);
+      const response = await axios.post(`http://localhost:5000/api/accountroutes/submitapplication`, data);
       set({ applicationStatus: 'success' });
       return { success: true, message: response.data.message };
     } catch (err: any) {

@@ -1,5 +1,5 @@
 import * as React from "react";
-import { View, Text, TouchableOpacity, ScrollView, StatusBar, RefreshControl, FlatList } from "react-native";
+import { View, Text, TouchableOpacity, ScrollView, StatusBar, RefreshControl, FlatList, ActivityIndicator } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { AntDesign, MaterialIcons } from "@expo/vector-icons";
 import Animated, { FadeInDown } from "react-native-reanimated";
@@ -7,15 +7,7 @@ import { router } from 'expo-router';
 import { useTheme } from "@/app/providers/ThemeProvider";
 import FontAwesome from '@expo/vector-icons/FontAwesome';
 import Feather from '@expo/vector-icons/Feather';
-
-type Account = {
-  id: string;
-  name: string;
-  number: string;
-  balance: string;
-  currency: string;
-  type: "current" | "savings" | "business";
-};
+import { useAccountStore } from "@/app/zustand/useAccountStore";
 
 type QuickAction = {
   id: string;
@@ -32,33 +24,16 @@ export default function AccountsScreen() {
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = React.useState(false);
   const { theme } = useTheme();
+  const { accounts, isLoading, error, fetchUserAccounts } = useAccountStore();
   
-  const accounts: Account[] = [
-    {
-      id: "1",
-      name: "Current Account",
-      number: "TN59 1234 5678 9012 3456 7890",
-      balance: "3,240.50",
-      currency: "DT",
-      type: "current",
-    },
-    {
-      id: "2",
-      name: "Savings Account",
-      number: "TN59 8765 4321 0987 6543 2109",
-      balance: "2,039.50",
-      currency: "DT",
-      type: "savings",
-    },
-    {
-      id: "3",
-      name: "Business Account",
-      number: "TN59 2468 1357 9080 7060 5040",
-      balance: "0.00",
-      currency: "DT",
-      type: "business",
-    },
-  ];
+  React.useEffect(() => {
+    fetchUserAccounts();
+  }, []);
+
+  const onRefresh = React.useCallback(() => {
+    setRefreshing(true);
+    fetchUserAccounts().finally(() => setRefreshing(false));
+  }, []);
 
   const quickActions: QuickAction[] = [
     {
@@ -103,15 +78,8 @@ export default function AccountsScreen() {
     },
   ];
 
-  const onRefresh = React.useCallback(() => {
-    setRefreshing(true);
-    setTimeout(() => {
-      setRefreshing(false);
-    }, 2000);
-  }, []);
-
-  const getAccountIcon = (type: Account["type"]) => {
-    switch (type) {
+  const getAccountIcon = (type: string) => {
+    switch (type.toLowerCase()) {
       case "current":
         return "account-balance";
       case "savings":
@@ -123,7 +91,7 @@ export default function AccountsScreen() {
     }
   };
 
-  const getAccountIconColor = (type: Account["type"]) => {
+  const getAccountIconColor = (type: string) => {
     if (theme === "dark") {
       return type === "current" 
         ? "#93c5fd" 
@@ -138,7 +106,7 @@ export default function AccountsScreen() {
         : "#9333ea";
   };
 
-  const getAccountBgColor = (type: Account["type"]) => {
+  const getAccountBgColor = (type: string) => {
     return type === "current"
       ? theme === "dark" 
         ? "bg-blue-900/30" 
@@ -173,16 +141,16 @@ export default function AccountsScreen() {
           </View>
           <View className="ml-3">
             <Text className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-              {item.name}
+              {item.accountType.name}
             </Text>
             <Text className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
-              {item.number.substring(0, 10)}...
+              {item.accountNumber.substring(0, 10)}...
             </Text>
           </View>
         </View>
         <View className="items-end">
           <Text className={`text-lg font-bold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-            {item.balance} {item.currency}
+            {item.balance.toFixed(2)} {item.currency}
           </Text>
           <View className="flex-row items-center mt-1">
             <Text className={`text-xs mr-1 ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
@@ -223,6 +191,28 @@ export default function AccountsScreen() {
     </TouchableOpacity>
   );
 
+  if (isLoading && !refreshing) {
+    return (
+      <View className={`flex-1 justify-center items-center ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <ActivityIndicator size="large" color={theme === "dark" ? "#fff" : "#000"} />
+      </View>
+    );
+  }
+
+  if (error) {
+    return (
+      <View className={`flex-1 justify-center items-center p-4 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
+        <Text className={theme === "dark" ? "text-red-400" : "text-red-600"}>{error}</Text>
+        <TouchableOpacity 
+          className={`mt-4 px-4 py-2 rounded-lg ${theme === "dark" ? "bg-blue-800" : "bg-blue-100"}`}
+          onPress={fetchUserAccounts}
+        >
+          <Text className={theme === "dark" ? "text-white" : "text-blue-800"}>Retry</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
       <StatusBar 
@@ -244,7 +234,7 @@ export default function AccountsScreen() {
       >
         <View className="p-5 pb-0">
           <Text className={`font-bold text-xl mb-3 ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-            All Accounts
+            My Accounts
           </Text>
 
           <FlatList
@@ -253,6 +243,13 @@ export default function AccountsScreen() {
             scrollEnabled={false}
             contentContainerStyle={{ paddingBottom: 20 }}
             renderItem={renderAccountItem}
+            ListEmptyComponent={
+              <View className="items-center justify-center py-10">
+                <Text className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
+                  No accounts found
+                </Text>
+              </View>
+            }
           />
         </View>
 

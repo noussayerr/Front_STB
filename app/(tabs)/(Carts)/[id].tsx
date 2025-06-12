@@ -19,11 +19,11 @@ export default function CartDetailsScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const router = useRouter();
   const { theme } = useTheme();
-  const { selectedCard, isLoading, error, fetchCardById, clearSelectedCard } = useCardStore();
-
+  const { selectedCardType, isLoading, error, fetchCardTypeById, clearSelectedCardType } = useCardStore();
+  console.log('Selected Card Type:', selectedCardType);
   useEffect(() => {
-    if (id) fetchCardById(id);
-    return () => clearSelectedCard();
+    if (id) fetchCardTypeById(id);
+    return () => clearSelectedCardType();
   }, [id]);
 
   // Early returns after all hooks
@@ -44,7 +44,7 @@ export default function CartDetailsScreen() {
     );
   }
 
-  if (!selectedCard) {
+  if (!selectedCardType) {
     return (
       <View className="flex-1 justify-center items-center">
         <Text className={theme === 'dark' ? 'text-red-400' : 'text-red-500'}>Card not found!</Text>
@@ -61,7 +61,7 @@ export default function CartDetailsScreen() {
     benefits = [], 
     features = [], 
     fees = {} 
-  } = selectedCard;
+  } = selectedCardType || {};
 
   return (
     <SafeAreaView className={`flex-1 ${theme === 'dark' ? 'bg-[#121212]' : 'bg-white'}`}>
@@ -171,7 +171,7 @@ export default function CartDetailsScreen() {
         {/* Apply Button */}
         <TouchableOpacity
           className="bg-blue-600 py-4 rounded-xl items-center mx-5"
-          onPress={() => router.push({ pathname: '/(tabs)/(Carts)/getmycard', params: { cardId: selectedCard._id } })}
+          onPress={() => router.push({ pathname: '/(tabs)/(Carts)/getmycard', params: { cardId: selectedCardType._id } })}
         >
           <Text className="text-white font-bold text-lg">Apply for This Card</Text>
         </TouchableOpacity>

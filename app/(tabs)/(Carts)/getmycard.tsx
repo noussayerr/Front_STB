@@ -45,7 +45,7 @@ interface DropdownOption {
 }
 
 export default function GetCardScreen() {
-  const { selectedCard } = useCardStore();
+  const { selectedCardType } = useCardStore();
   const router = useRouter()
   const { cardId } = useLocalSearchParams<{ cardId: string }>()
   const insets = useSafeAreaInsets()
@@ -290,7 +290,7 @@ export default function GetCardScreen() {
                 <Text className={`text-sm font-medium ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>Selected Card</Text>
                 <View className={`${theme === "dark" ? "bg-blue-900 border-blue-800" : "bg-blue-50 border-blue-200"} rounded-lg px-4 py-3 border`}>
                   <Text className={`text-base font-medium ${theme === "dark" ? "text-blue-300" : "text-blue-700"}`}>
-                    {selectedCard ? selectedCard.name : "Select a card"}
+                    {selectedCardType ? selectedCardType.name : "Select a card"}
                   </Text>
                 </View>
               </View>
@@ -520,7 +520,7 @@ export default function GetCardScreen() {
               <View className="p-4">
                 <View className="flex-row justify-between py-2">
                   <Text className={`${theme === "dark" ? "text-gray-300" : "text-slate-600"}`}>Card Type</Text>
-                  <Text className={`${theme === "dark" ? "text-white" : "text-slate-900"} font-medium`}>{selectedCard ? selectedCard.name : ""}</Text>
+                  <Text className={`${theme === "dark" ? "text-white" : "text-slate-900"} font-medium`}>{selectedCardType ? selectedCardType.name : ""}</Text>
                 </View>
 
                 <View className="flex-row justify-between py-2">
