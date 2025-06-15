@@ -1,6 +1,6 @@
 import { View, Text, TouchableOpacity, SafeAreaView, StatusBar, ScrollView } from "react-native"
 import { useRouter } from 'expo-router';
-import { CreditCard, Building2 } from "lucide-react-native"
+import { Building2 } from "lucide-react-native"
 import { useTheme } from "@/app/providers/ThemeProvider"
 
 export default function SelectTransferMethod() {
@@ -25,25 +25,8 @@ export default function SelectTransferMethod() {
         </Text>
 
         <TouchableOpacity
-          className={`flex-row items-center p-4 ${theme === "dark" ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"} border rounded-xl mb-4`}
-          onPress={() => router.push(`/(tabs)/(send)/recipientInfo?method=card`)}
-        >
-          <View className={`w-12 h-12 rounded-full items-center justify-center ${theme === "dark" ? "bg-blue-900/30" : "bg-blue-100"}`}>
-            <CreditCard size={24} color={theme === "dark" ? "#93c5fd" : "#2563eb"} />
-          </View>
-          <View className="ml-4">
-            <Text className={`font-semibold text-lg ${theme === "dark" ? "text-white" : "text-gray-800"}`}>
-              Card Transfer
-            </Text>
-            <Text className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>
-              Transfer money using card details
-            </Text>
-          </View>
-        </TouchableOpacity>
-
-        <TouchableOpacity
           className={`flex-row items-center p-4 ${theme === "dark" ? "bg-gray-700 border-gray-600" : "bg-white border-gray-200"} border rounded-xl`}
-          onPress={() => router.push(`/(tabs)/(send)/recipientInfo?method=bank`)}
+          onPress={() => router.push(`/(tabs)/(send)/selectAccount`)}
         >
           <View className={`w-12 h-12 rounded-full items-center justify-center ${theme === "dark" ? "bg-blue-900/30" : "bg-blue-100"}`}>
             <Building2 size={24} color={theme === "dark" ? "#93c5fd" : "#2563eb"} />

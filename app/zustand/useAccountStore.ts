@@ -78,7 +78,7 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
   fetchUserAccounts: async () => {
     set({ isLoading: true, error: null });
     try {
-      const { data } = await axios.get(`http://localhost:5000/api/accountroutes/myaccounts`, {
+      const { data } = await axios.get(`${API_BASE}/myaccounts`, {
        headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
 
@@ -132,7 +132,7 @@ export const useAccountStore = create<AccountStoreState>((set) => ({
   submitApplication: async (data) => {
     set({ applicationStatus: 'loading', applicationError: null });
     try {
-      const response = await axios.post(`http://localhost:5000/api/accountroutes/submitapplication`, data);
+      const response = await axios.post(`${API_BASE}/submitapplication`, data);
       set({ applicationStatus: 'success' });
       return { success: true, message: response.data.message };
     } catch (err: any) {

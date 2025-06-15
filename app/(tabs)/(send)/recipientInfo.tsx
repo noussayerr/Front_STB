@@ -4,33 +4,29 @@ import { ChevronLeft } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/app/providers/ThemeProvider"
 
-type Recipient = {
-  name: string;
-  accountNumber: string;
-  avatar?: string;
+type RecipientInfoParams = {
+  senderAccount: string;
 };
 
 export default function RecipientInfo() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { method } = useLocalSearchParams<{ method: "card" | "bank" }>();
+  const params = useLocalSearchParams<RecipientInfoParams>();
+  const senderAccount = JSON.parse(params.senderAccount);
 
   const [name, setName] = useState("");
   const [accountNumber, setAccountNumber] = useState("");
 
   const handleContinue = () => {
     if (name && accountNumber) {
-      const recipient: Recipient = {
-        name,
-        accountNumber,
-        avatar: undefined,
-      };
-
       router.push({
         pathname: "/(tabs)/(send)/transferAmount",
         params: {
-          method,
-          recipient: JSON.stringify(recipient),
+          senderAccount: JSON.stringify(senderAccount),
+          recipient: JSON.stringify({
+            name,
+            accountNumber
+          }),
         },
       });
     }
@@ -38,7 +34,6 @@ export default function RecipientInfo() {
 
   return (
     <SafeAreaView className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-blue-600"}`}>
-      
       <KeyboardAvoidingView behavior={Platform.OS === "ios" ? "padding" : "height"} className="flex-1">
         <View className="px-4 py-4 flex-row items-start mt-4 h-14 sm:h-28">
           <TouchableOpacity
@@ -48,13 +43,19 @@ export default function RecipientInfo() {
             <ChevronLeft size={24} color="white" />
           </TouchableOpacity>
           <Text className="text-white text-lg sm:text-xl font-bold ml-4">
-            {method === "card" ? "Card Transfer" : "Bank Transfer"}
+            Recipient Information
           </Text>
         </View>
 
         <ScrollView className={`flex-1 ${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-t-3xl px-4 pt-4 sm:pt-6`}>
+          <View className="mb-4 p-4 rounded-xl bg-blue-50 border border-blue-100">
+            <Text className="text-blue-800 font-semibold">From Account</Text>
+            <Text className="text-blue-900">{senderAccount.accountNumber}</Text>
+            <Text className="text-blue-800">Balance: {senderAccount.balance} DT</Text>
+          </View>
+
           <Text className={`text-md sm:text-xl font-semibold mb-4 sm:mb-6 ${theme === "dark" ? "text-white" : "text-black"}`}>
-            Recipient Information
+            Recipient Details
           </Text>
 
           <View className="mb-2 sm:mb-6">
@@ -72,11 +73,11 @@ export default function RecipientInfo() {
 
           <View className="mb-4 sm:mb-8">
             <Text className={`mb-2 text-sm sm:text-lg ${theme === "dark" ? "text-gray-300" : "text-black"}`}>
-              {method === "card" ? "Card Number" : "Bank Account Number"}
+              Bank Account Number
             </Text>
             <TextInput
               className={`rounded-xl p-2 sm:p-4 ${theme === "dark" ? "bg-gray-700 border-gray-600 text-white" : "bg-gray-50 border-gray-200 text-gray-800"} border`}
-              placeholder={method === "card" ? "Enter card number" : "Enter account number"}
+              placeholder="Enter account number"
               placeholderTextColor={theme === "dark" ? "#9ca3af" : "#9ca3af"}
               value={accountNumber}
               onChangeText={setAccountNumber}

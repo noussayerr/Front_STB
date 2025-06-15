@@ -8,6 +8,10 @@ export default function SendLayout() {
         options={{ title: "Send", headerShown: false }}
       />
       <Stack.Screen
+        name="selectAccount"
+        options={{ title: "selectAccount", headerShown: false }}
+      />
+      <Stack.Screen
         name="recipientInfo"
         options={{ title: "Recipient Info", headerShown: false }}
       />

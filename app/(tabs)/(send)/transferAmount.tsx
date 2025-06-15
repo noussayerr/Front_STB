@@ -1,28 +1,39 @@
 import { useState } from "react";
-import { View, Text, TouchableOpacity, SafeAreaView, Image, StyleSheet, Modal } from "react-native";
-import { ChevronLeft, ChevronDown, Delete, X } from "lucide-react-native";
+import { View, Text, TouchableOpacity, SafeAreaView, Image, StyleSheet, Modal, Alert } from "react-native";
+import { ChevronLeft, Delete, X } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/app/providers/ThemeProvider";
+import axios from "axios";
 
 type Recipient = {
   name: string;
   accountNumber: string;
-  avatar?: string;
+};
+
+type SenderAccount = {
+  id: string;
+  accountNumber: string;
+  balance: number;
+  accountType: {
+    name: string;
+  };
 };
 
 export default function TransferAmount() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { recipient, method } = useLocalSearchParams<{
+  const { recipient, senderAccount } = useLocalSearchParams<{
     recipient: string;
-    method: "card" | "bank";
+    senderAccount: string;
   }>();
 
   const parsedRecipient: Recipient = JSON.parse(recipient);
+  const parsedSenderAccount: SenderAccount = JSON.parse(senderAccount);
   const [amount, setAmount] = useState("0");
   const [pinModalVisible, setPinModalVisible] = useState(false);
   const [pin, setPin] = useState("");
   const [pinError, setPinError] = useState("");
+  const [isProcessing, setIsProcessing] = useState(false);
 
   const handleNumberPress = (num: string) => {
     if (amount === "0") {
@@ -47,6 +58,11 @@ export default function TransferAmount() {
   };
 
   const handleContinue = () => {
+    const amountNum = parseFloat(amount);
+    if (amountNum > parsedSenderAccount.balance) {
+      Alert.alert("Insufficient Funds", "You don't have enough balance for this transfer");
+      return;
+    }
     setPinModalVisible(true);
   };
 
@@ -62,23 +78,37 @@ export default function TransferAmount() {
     }
   };
 
-  const handlePinSubmit = () => {
-    // In a real app, you would validate the PIN against a stored value or API
-    // For this example, we'll use a simple validation (PIN = 1234)
-    if (pin === "1234") {
-      setPinModalVisible(false);
-      setPin("");
-      setPinError("");
-      router.push({
-        pathname: "/(tabs)/(send)/transferSuccess",
-        params: {
-          amount,
-          recipient: JSON.stringify(parsedRecipient),
-        },
+  const handlePinSubmit = async () => {
+    if (pin.length !== 4) {
+      setPinError("PIN must be 4 digits");
+      return;
+    }
+
+    setIsProcessing(true);
+    
+    try {
+      const response = await axios.post("http://localhost:5000/api/transactions/transfer", {
+        senderAccountId: parsedSenderAccount.id,
+        recipientAccountNumber: parsedRecipient.accountNumber,
+        amount: parseFloat(amount),
+        description: `Transfer to ${parsedRecipient.name}`
       });
-    } else {
-      setPinError("Invalid PIN. Please try again.");
-      setPin("");
+
+      if (response.data.message === "Transfer successful") {
+        router.push({
+          pathname: "/(tabs)/(send)/transferSuccess",
+          params: {
+            amount,
+            recipient: JSON.stringify(parsedRecipient),
+            reference: response.data.transaction.reference
+          },
+        });
+      }
+    } catch (error: any) {
+      console.error("Transfer error:", error);
+      setPinError(error?.response?.data?.message || "Transfer failed. Please try again.");
+    } finally {
+      setIsProcessing(false);
     }
   };
 
@@ -91,34 +121,30 @@ export default function TransferAmount() {
         >
           <ChevronLeft size={24} color="white" />
         </TouchableOpacity>
-        <Text className="text-white text-xl font-bold ml-4">Send Money</Text>
+        <Text className="text-white text-xl font-bold ml-4">Transfer Amount</Text>
       </View>
 
       <View className={`flex-1 ${theme === "dark" ? "bg-gray-800" : "bg-white"} rounded-t-3xl px-4 pt-6 items-center`}>
         <View className={`w-full rounded-xl p-4 flex-row items-center justify-between mb-4 ${theme === "dark" ? "bg-gray-700" : "bg-gray-50"}`}>
           <View className="flex-row items-center">
-            {parsedRecipient.avatar ? (
-              <Image source={{ uri: parsedRecipient.avatar }} className="w-10 h-10 rounded-full" />
-            ) : (
-              <View className={`w-10 h-10 rounded-full items-center justify-center ${theme === "dark" ? "bg-gray-600" : "bg-gray-200"}`}>
-                <Text className={theme === "dark" ? "text-gray-300 font-bold" : "text-gray-500 font-bold"}>
-                  {parsedRecipient.name.charAt(0)}
-                </Text>
-              </View>
-            )}
+            <View className={`w-10 h-10 rounded-full items-center justify-center ${theme === "dark" ? "bg-gray-600" : "bg-gray-200"}`}>
+              <Text className={theme === "dark" ? "text-gray-300 font-bold" : "text-gray-500 font-bold"}>
+                {parsedRecipient.name.charAt(0)}
+              </Text>
+            </View>
             <View className="ml-3">
               <Text className={theme === "dark" ? "text-white font-semibold" : "text-gray-800 font-semibold"}>
                 {parsedRecipient.name}
               </Text>
               <Text className={theme === "dark" ? "text-gray-400 text-sm" : "text-gray-500 text-sm"}>
-                {method === "bank" ? "Bank" : "Card"} - {parsedRecipient.accountNumber}
+                Account - {parsedRecipient.accountNumber}
               </Text>
             </View>
           </View>
         </View>
 
         <Text className={`text-4xl font-bold mb-4 ${theme === "dark" ? "text-white" : "text-gray-900"}`}>
-          ${amount}
+          {amount} DT
         </Text>
 
         <View style={styles.numberPad}>
@@ -151,7 +177,9 @@ export default function TransferAmount() {
             onPress={handleContinue}
             disabled={amount === "0"}
           >
-            <Text className="text-white font-semibold text-lg">Continue</Text>
+            <Text className="text-white font-semibold text-lg">
+              {isProcessing ? "Processing..." : "Continue"}
+            </Text>
           </TouchableOpacity>
         </View>
       </View>
@@ -186,7 +214,7 @@ export default function TransferAmount() {
             </View>
             
             <Text className={`text-center mb-2 ${theme === "dark" ? "text-gray-300" : "text-gray-600"}`}>
-              Please enter your PIN to confirm the transaction
+              Please enter your PIN to confirm the transfer of {amount} DT
             </Text>
             
             {pinError ? (
@@ -241,12 +269,12 @@ export default function TransferAmount() {
                 pin.length === 4 ? "bg-blue-600" : theme === "dark" ? "bg-gray-700" : "bg-gray-200"
               }`} 
               onPress={handlePinSubmit}
-              disabled={pin.length !== 4}
+              disabled={pin.length !== 4 || isProcessing}
             >
               <Text className={`font-semibold text-lg ${
                 pin.length === 4 ? "text-white" : theme === "dark" ? "text-gray-400" : "text-gray-500"
               }`}>
-                Confirm
+                {isProcessing ? "Processing..." : "Confirm Transfer"}
               </Text>
             </TouchableOpacity>
           </View>

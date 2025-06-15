@@ -1,32 +1,30 @@
 import { View, Text, TouchableOpacity, SafeAreaView, Image, Share } from "react-native";
-import { ChevronLeft, Share2, ChevronDown, Check } from "lucide-react-native";
+import { ChevronLeft, Share2, Check } from "lucide-react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useTheme } from "@/app/providers/ThemeProvider"
 
 type Recipient = {
   name: string;
   accountNumber: string;
-  avatar?: string;
 };
 
 export default function TransferSuccess() {
   const router = useRouter();
   const { theme } = useTheme();
-  const { amount, recipient } = useLocalSearchParams<{
+  const { amount, recipient, reference } = useLocalSearchParams<{
     amount: string;
     recipient: string;
+    reference: string;
   }>();
 
   const parsedRecipient: Recipient = JSON.parse(recipient);
   const currentDate = new Date();
   const formattedDate = `${currentDate.getDate()} ${currentDate.toLocaleString("default", { month: "short" })} ${currentDate.getFullYear()}, ${currentDate.toLocaleString("en-US", { hour: "numeric", minute: "numeric", hour12: true })}`;
 
-  const referenceNumber = Math.floor(Math.random() * 10000000000000).toString();
-
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `I've sent $${amount} to ${parsedRecipient.name}. Reference: ${referenceNumber}`,
+        message: `I've sent ${amount} DT to ${parsedRecipient.name}. Reference: ${reference}`,
       });
     } catch (error) {
       console.log(error);
@@ -34,12 +32,11 @@ export default function TransferSuccess() {
   };
 
   const handleDone = () => {
-    router.push("/");
+    router.push("/(tabs)/home");
   };
 
   return (
     <SafeAreaView className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-blue-600"}`}>
-      
       <View className="px-4 py-4 flex-row gap-2 items-start h-28">
         <TouchableOpacity
           onPress={() => router.back()}
@@ -67,7 +64,7 @@ export default function TransferSuccess() {
           <View className="flex-row justify-between items-center">
             <Text className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>Transfer Amount</Text>
             <Text className={theme === "dark" ? "text-white font-bold" : "text-gray-900 font-bold"}>
-              ${amount}
+              {amount} DT
             </Text>
           </View>
         </View>
@@ -75,21 +72,17 @@ export default function TransferSuccess() {
         <View className={`border ${theme === "dark" ? "border-gray-700" : "border-gray-100"} rounded-xl p-4 mb-4`}>
           <View className="flex-row items-center justify-between">
             <View className="flex-row items-center">
-              {parsedRecipient.avatar ? (
-                <Image source={{ uri: parsedRecipient.avatar }} className="w-10 h-10 rounded-full" />
-              ) : (
-                <View className={`w-10 h-10 rounded-full items-center justify-center ${theme === "dark" ? "bg-gray-600" : "bg-gray-200"}`}>
-                  <Text className={theme === "dark" ? "text-gray-300 font-bold" : "text-gray-500 font-bold"}>
-                    {parsedRecipient.name.charAt(0)}
-                  </Text>
-                </View>
-              )}
+              <View className={`w-10 h-10 rounded-full items-center justify-center ${theme === "dark" ? "bg-gray-600" : "bg-gray-200"}`}>
+                <Text className={theme === "dark" ? "text-gray-300 font-bold" : "text-gray-500 font-bold"}>
+                  {parsedRecipient.name.charAt(0)}
+                </Text>
+              </View>
               <View className="ml-3">
                 <Text className={theme === "dark" ? "text-white font-semibold" : "text-gray-800 font-semibold"}>
                   {parsedRecipient.name}
                 </Text>
                 <Text className={theme === "dark" ? "text-gray-400 text-sm" : "text-gray-500 text-sm"}>
-                  Bank - {parsedRecipient.accountNumber}
+                  Account - {parsedRecipient.accountNumber}
                 </Text>
               </View>
             </View>
@@ -103,9 +96,19 @@ export default function TransferSuccess() {
           </View>
 
           <View className="flex-row justify-between items-center">
-            <Text className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>No. Ref</Text>
-            <Text className={theme === "dark" ? "text-white" : "text-gray-900"}>{referenceNumber}</Text>
+            <Text className={theme === "dark" ? "text-gray-400" : "text-gray-500"}>Reference Number</Text>
+            <Text className={theme === "dark" ? "text-white" : "text-gray-900"}>{reference}</Text>
           </View>
+        </View>
+        
+        <View className="flex-row justify-center my-6">
+          <TouchableOpacity 
+            className="flex-row items-center p-3 rounded-full bg-blue-50"
+            onPress={handleShare}
+          >
+            <Share2 size={20} color="#2563eb" />
+            <Text className="text-blue-600 ml-2 font-medium">Share Receipt</Text>
+          </TouchableOpacity>
         </View>
         
         <View className="absolute bottom-20 left-0 right-0">

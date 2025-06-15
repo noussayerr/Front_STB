@@ -182,7 +182,7 @@ export const useCardStore = create<CardStoreState>((set) => ({
   fetchUserCards: async () => {
     set({ cardsLoading: true, cardsError: null });
     try {
-      const response = await axios.get<UserCard[]>(`http://localhost:5000/api/cartroutes/usercards`, {
+      const response = await axios.get<UserCard[]>(`${API_BASE}/usercards`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       set({ userCards: response.data, cardsLoading: false });
@@ -197,7 +197,7 @@ export const useCardStore = create<CardStoreState>((set) => ({
   fetchCardDetails: async (id: string) => {
     set({ cardsLoading: true, cardsError: null, currentCard: null });
     try {
-      const response = await axios.get<UserCard>(`http://localhost:5000/api/cartroutes/getonecard/${id}`, {
+      const response = await axios.get<UserCard>(`${API_BASE}/getonecard/${id}`, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       set({ currentCard: response.data, cardsLoading: false });
@@ -211,7 +211,7 @@ export const useCardStore = create<CardStoreState>((set) => ({
 
   toggleBlockCard: async (id: string) => {
     try {
-      const response = await axios.put<UserCard>(`http://localhost:5000/api/cartroutes/toggleblock/${id}`, {}, {
+      const response = await axios.put<UserCard>(`${API_BASE}/toggleblock/${id}`, {}, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       
@@ -236,7 +236,7 @@ export const useCardStore = create<CardStoreState>((set) => ({
 
   changeCardPin: async (cardId: string, newPin: string) => {
     try {
-      await axios.put(`http://localhost:5000/api/cartroutes/changepin`, { cardId, newPin }, {
+      await axios.put(`${API_BASE}/changepin`, { cardId, newPin }, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
       });
       return { success: true, message: 'PIN changed successfully' };
