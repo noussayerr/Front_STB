@@ -92,26 +92,6 @@ export default function CardDetailsScreen() {
     Linking.openURL("tel:+21670555123")
   }
 
-  const getCardImage = () => {
-    if (!currentCard?.cardType) return require('@/assets/carts/CarteCCash.png')
-    
-    switch(currentCard.cardType.name.toLowerCase()) {
-      case 'travel':
-        return require("@/assets/carts/CARTESTBTRAVEL.png")
-      case 'epargne':
-        return require("@/assets/carts/CarteSTBEpargne.png")
-      case 'visa electron':
-        return require("@/assets/carts/CARTEVISAELECTRONNATIONALE.png")
-      case 'cib3':
-        return require("@/assets/carts/CARTECIB3.png")
-      case 'c cash':
-        return require("@/assets/carts/CarteCCash.png")
-      case 'c pay':
-        return require("@/assets/carts/CarteCPay.png")
-      default:
-        return require("@/assets/carts/CarteCCash.png")
-    }
-  }
 
   const formatCardNumber = (number: string) => {
     if (!number) return '•••• •••• •••• ••••'
@@ -179,7 +159,7 @@ export default function CardDetailsScreen() {
         {/* Card Display */}
         <View className="px-4 items-center mb-6">
           <Image
-            source={getCardImage()}
+            source={{ uri: currentCard.cardType.imageUrl }}
             style={{
               width: "100%",
               height: 220,

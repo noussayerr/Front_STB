@@ -10,7 +10,15 @@ export default function OffersScreen() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { theme } = useTheme();
-  const { credits = [], isLoading, error, fetchCredits } = useCreditStore();
+  const { 
+    creditTypes: credits, 
+    selectedCredit,
+    isLoading, 
+    error, 
+    fetchCreditTypes: fetchCredits,
+    fetchCreditById 
+  } = useCreditStore();
+
   useEffect(() => {
     fetchCredits();
   }, []);
@@ -39,6 +47,36 @@ export default function OffersScreen() {
     );
   }
 
+  const handleOfferPress = async (offerId: string) => {
+  try {
+    await fetchCreditById(offerId);
+    
+    // Get the current selectedCredit after fetching
+    const currentSelectedCredit = useCreditStore.getState().selectedCredit;
+    
+    if (currentSelectedCredit) {
+      // Extract numeric value from duration (e.g., "Up to 25 months" -> 25)
+      const durationMatch = currentSelectedCredit.duration.match(/\d+/);
+      const durationMonths = durationMatch ? parseInt(durationMatch[0]) : 12;
+      
+      router.push({
+        pathname: "/(tabs)/(account)/CreditSimulator",
+        params: { 
+          creditId: offerId,
+          interestRate: currentSelectedCredit.interestRate.toString(),
+          duration: durationMonths.toString(),
+          title: currentSelectedCredit.title,
+          maxTerm: Math.ceil(durationMonths / 12).toString() // Convert months to years
+        }
+      });
+    } else {
+      console.error("No credit data found for ID:", offerId);
+    }
+  } catch (err) {
+    console.error("Failed to fetch credit details:", err);
+  }
+};
+
   return (
     <View style={{ flex: 1, backgroundColor: theme === "dark" ? "#121212" : "white" }}>
       <StatusBar
@@ -56,7 +94,7 @@ export default function OffersScreen() {
 
       <ScrollView className="flex-1 px-4 pb-4">
         <Text className={`text-lg mb-4 ${theme === "dark" ? "text-gray-300" : "text-gray-700"}`}>
-          Exclusive offers tailored just for you
+          Exclusive offers tailored just for you sss
         </Text>
 
         {credits.length === 0 ? (
@@ -68,16 +106,11 @@ export default function OffersScreen() {
         ) : (
           credits.map((offer) => (
             <TouchableOpacity
-              key={offer?.id || Math.random().toString()}
+              key={offer.id}
               className={`mb-4 rounded-xl overflow-hidden border ${
                 theme === "dark" ? "border-gray-800 bg-gray-900" : "border-gray-200 bg-white"
               }`}
-              onPress={() => {
-                router.push({
-                  pathname: "/(tabs)/(account)",
-                  params: { creditId: offer?.id }
-                });
-              }}
+              onPress={() => handleOfferPress(offer.id)}
               style={{
                 shadowColor: theme === "dark" ? "#000" : "#000",
                 shadowOffset: { width: 0, height: 2 },
@@ -89,21 +122,21 @@ export default function OffersScreen() {
               <View className="p-4">
                 <View className="flex-row items-center mb-3">
                   <View
-                    style={{ backgroundColor: offer?.color || "#2563eb" }}
+                    style={{ backgroundColor: offer.color || "#2563eb" }}
                     className="w-12 h-12 rounded-full items-center justify-center mr-3"
                   >
                     <Ionicons 
-                      name={offer?.icon as any || "card"} 
+                      name={offer.icon as any || "card"} 
                       size={24} 
                       color="white" 
                     />
                   </View>
                   <View className="flex-1">
                     <Text className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-black"}`}>
-                      {offer?.title || "Credit Offer"}
+                      {offer.title}
                     </Text>
                     <Text className={`${theme === "dark" ? "text-gray-400" : "text-gray-600"}`}>
-                      {offer?.description || "No description available"}
+                      {offer.description}
                     </Text>
                   </View>
                 </View>
@@ -119,13 +152,13 @@ export default function OffersScreen() {
                       Interest Rate
                     </Text>
                     <Text className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-black"}`}>
-                      {offer?.interestRate || "N/A"}
+                      {offer.interestRate}%
                     </Text>
                   </View>
                   <View>
                     <Text className={`text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>Duration</Text>
                     <Text className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-black"}`}>
-                      {offer?.duration || "N/A"}
+                      {offer.duration}
                     </Text>
                   </View>
                 </View>
@@ -133,18 +166,13 @@ export default function OffersScreen() {
                 <View className="flex-row items-center mt-2">
                   <MaterialIcons name="verified-user" size={16} color={theme === "dark" ? "#64748b" : "#94a3b8"} />
                   <Text className={`ml-1 text-sm ${theme === "dark" ? "text-gray-400" : "text-gray-500"}`}>
-                    {offer?.eligibility || "Eligibility requirements apply"}
+                    {offer.eligibility}
                   </Text>
                 </View>
 
                 <TouchableOpacity 
                   className="mt-4 bg-blue-600 py-3 rounded-lg items-center"
-                  onPress={() => {
-                    router.push({
-                      pathname: "/(tabs)/(account)",
-                      params: { creditId: offer?.id }
-                    });
-                  }}
+                  onPress={() => handleOfferPress(offer.id)}
                 >
                   <Text className="text-white font-semibold">Apply Now</Text>
                 </TouchableOpacity>

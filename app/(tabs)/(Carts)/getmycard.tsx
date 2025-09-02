@@ -83,6 +83,7 @@ export default function GetCardScreen() {
   const handleSubmit = async () => {
     setIsSubmitting(true)
     await submitApplication(formData)
+    router.push("/(tabs)")
     setTimeout(() => {
       setIsSubmitting(false)
       

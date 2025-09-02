@@ -1,3 +1,4 @@
+// app/(tabs)/(send)/_layout.tsx
 import { Stack } from "expo-router";
 
 export default function SendLayout() {
@@ -22,6 +23,23 @@ export default function SendLayout() {
       <Stack.Screen
         name="transferSuccess"
         options={{ title: "Transfer Success", headerShown: false }}
+      />
+      {/* Add new card screens */}
+      <Stack.Screen
+        name="cardTransfer"
+        options={{ title: "Card Transfer", headerShown: false }}
+      />
+      <Stack.Screen
+        name="cardRechargeMethod"
+        options={{ title: "Recharge Method", headerShown: false }}
+      />
+      <Stack.Screen
+        name="cardRechargeByAccount"
+        options={{ title: "Recharge by Account", headerShown: false }}
+      />
+      <Stack.Screen
+        name="cardToCardTransfer"
+        options={{ title: "Card to Card", headerShown: false }}
       />
     </Stack>
   );

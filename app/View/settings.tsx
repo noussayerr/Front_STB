@@ -35,7 +35,7 @@ export default function SettingsScreen() {
     {
       title: "Account Details",
       icon: <Feather name="user" size={22} color={theme === "dark" ? "#a5b4fc" : "#4f46e5"} />,
-      onPress: () => router.push("/"),
+      onPress: () => router.push("/View/ReclamationCenter"),
       showArrow: true,
     },
     {

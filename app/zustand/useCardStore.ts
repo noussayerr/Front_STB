@@ -1,7 +1,7 @@
 import { create } from 'zustand';
 import axios from 'axios';
 
-const API_BASE = `https://backend-stb.onrender.com/api/cartroutes`;
+const API_BASE = `http://localhost:5000/api/cartroutes`;
 
 // Interfaces
 export interface CardType {
@@ -253,6 +253,7 @@ export const useCardStore = create<CardStoreState>((set) => ({
   // Application Methods
   submitApplication: async (data: ApplicationData) => {
     set({ applicationStatus: 'loading', applicationError: null });
+    console.log('Submitting application with data:', data);
     try {
       const response = await axios.post(`${API_BASE}/submitapplication`, data, {
         headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }

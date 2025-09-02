@@ -87,7 +87,7 @@ export default function TransferAmount() {
     setIsProcessing(true);
     
     try {
-      const response = await axios.post("http://localhost:5000/api/transactions/transfer", {
+      const response = await axios.post("https://backend-stb.onrender.com/api/transactions/transfer", {
         senderAccountId: parsedSenderAccount.id,
         recipientAccountNumber: parsedRecipient.accountNumber,
         amount: parseFloat(amount),

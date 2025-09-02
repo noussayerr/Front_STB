@@ -35,6 +35,10 @@ export default function accountLayout() {
         name="offers"
         options={{ title: "offers", headerShown: false }}
       />
+      <Stack.Screen
+        name="applycredit"
+        options={{ title: "Credit Types", headerShown: false }}
+        />
       
       
     </Stack>

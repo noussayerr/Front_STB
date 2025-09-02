@@ -171,7 +171,7 @@ export default function HomeScreen() {
               >
                 <View className="relative">
                   <Image
-                    source={getCardImage(item.cardType?.name || "")}
+                    source={{uri: item.cardType?.imageUrl}}
                     style={{
                       width: "95%",
                       height: 200,

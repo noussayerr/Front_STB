@@ -26,6 +26,7 @@ export default function RootLayout() {
 
         {/* Protected routes - only for authenticated users */}
         <Stack.Screen name="View/pack" options={{ headerShown: false }}/>
+        <Stack.Screen name="View/ReclamationCenter" options={{ headerShown: false }}/>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="View/settings" options={{ headerShown: false }} />
         <Stack.Screen name="auth/forgotpassword" options={{ headerShown: false }} />

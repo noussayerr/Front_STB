@@ -1,43 +1,86 @@
-import * as React from "react"
-import { View, Text, TouchableOpacity, ScrollView, StatusBar, TextInput, Modal, Pressable } from "react-native"
-import { useSafeAreaInsets } from "react-native-safe-area-context"
-import { AntDesign } from "@expo/vector-icons"
-import Animated, { FadeInDown } from "react-native-reanimated"
-import Slider from "@react-native-community/slider"
-import { useTheme } from "@/app/providers/ThemeProvider"
-import { useRouter } from "expo-router";
+import React, { useState, useEffect } from "react";
+import { View, Text, TouchableOpacity, ScrollView, StatusBar, TextInput, Modal, Pressable } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { AntDesign } from "@expo/vector-icons";
+import { useTheme } from "@/app/providers/ThemeProvider";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import Slider from "@react-native-community/slider";
 
-export default function CreditSimulatorScreen({ navigation }: any) {
+export default function CreditSimulatorScreen() {
   const router = useRouter();
-  const insets = useSafeAreaInsets()
-  const { theme } = useTheme()
-  const [loanAmount, setLoanAmount] = React.useState("100000")
-  const [interestRate, setInterestRate] = React.useState(5.5)
-  const [loanTerm, setLoanTerm] = React.useState(20)
-  const [showResults, setShowResults] = React.useState(false)
+  const { 
+    creditid, 
+    interestRate: initialInterestRate = "5.5", 
+    duration: initialDuration = "12",
+    title: creditTitle = "Credit Simulator",
+    maxTerm: creditMaxTerm = "5"
+  } = useLocalSearchParams<{ 
+    creditid?: string,
+    interestRate?: string,
+    duration?: string,
+    title?: string,
+    maxTerm?: string
+  }>();
+  
+  const insets = useSafeAreaInsets();
+  const { theme } = useTheme();
+  
+  // Convert passed parameters to numbers
+  const initialInterest = parseFloat(initialInterestRate);
+  const initialDurationMonths = parseInt(initialDuration);
+  const maxTermYears = parseInt(creditMaxTerm);
+  
+  // Form state with defaults from route params
+  const [loanAmount, setLoanAmount] = useState("10000");
+  const [interestRate, setInterestRate] = useState(initialInterest);
+  const [loanTerm, setLoanTerm] = useState(
+    Math.min(Math.ceil(initialDurationMonths / 12), maxTermYears)
+  );
+  const [showResults, setShowResults] = useState(false);
 
+  // Calculate loan details
   const calculateMonthlyPayment = () => {
-    const principal = Number.parseFloat(loanAmount.replace(/,/g, ""))
-    const monthlyRate = interestRate / 100 / 12
-    const numberOfPayments = loanTerm * 12
+    const principal = parseFloat(loanAmount.replace(/,/g, "")) || 0;
+    const monthlyRate = interestRate / 100 / 12;
+    const numberOfPayments = loanTerm * 12;
+
+    if (monthlyRate === 0) { // Handle 0% interest case
+      return principal / numberOfPayments;
+    }
 
     const monthlyPayment =
       (principal * monthlyRate * Math.pow(1 + monthlyRate, numberOfPayments)) /
-      (Math.pow(1 + monthlyRate, numberOfPayments) - 1)
+      (Math.pow(1 + monthlyRate, numberOfPayments) - 1);
 
-    return isNaN(monthlyPayment) ? 0 : monthlyPayment
-  }
+    return isNaN(monthlyPayment) ? 0 : monthlyPayment;
+  };
 
-  const totalPayment = calculateMonthlyPayment() * loanTerm * 12
-  const totalInterest = totalPayment - Number.parseFloat(loanAmount.replace(/,/g, ""))
+  const monthlyPayment = calculateMonthlyPayment();
+  const totalPayment = monthlyPayment * loanTerm * 12;
+  const totalInterest = totalPayment - (parseFloat(loanAmount.replace(/,/g, "")) || 0);
 
   const formatCurrency = (value: number) => {
-    return value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,")
-  }
+    return value.toFixed(2).replace(/\d(?=(\d{3})+\.)/g, "$&,");
+  };
 
   const handleSimulate = () => {
-    setShowResults(true)
-  }
+    setShowResults(true);
+  };
+
+  const handleApply = () => {
+  setShowResults(false);
+  router.push({
+    pathname: "/(tabs)/(account)/applycredit",
+    params: { 
+      creditId: creditid,
+      amount: loanAmount.replace(/,/g, ""),
+      duration: loanTerm.toString(),
+      monthlyPayment: monthlyPayment.toFixed(2), // This ensures 2 decimal places
+      interestRate: interestRate.toString(),
+      title: creditTitle
+    }
+  });
+};
 
   return (
     <View className={`flex-1 ${theme === "dark" ? "bg-[#121212]" : "bg-white"}`}>
@@ -51,25 +94,20 @@ export default function CreditSimulatorScreen({ navigation }: any) {
           <AntDesign name="arrowleft" size={24} color={theme === "dark" ? "#f8fafc" : "#0f172a"} />
         </TouchableOpacity>
         <Text className={`text-xl font-bold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
-          Credit Simulator
+          {creditTitle}
         </Text>
         <View style={{ width: 24 }} />
       </View>
 
       <ScrollView className="flex mb-20" showsVerticalScrollIndicator={false}>
         <View className="p-5">
-          <View 
-            entering={FadeInDown.duration(400)} 
-            className={`p-5 rounded-xl mb-6 ${theme === "dark" ? "bg-gray-800" : "bg-blue-50"}`}
-          >
+          <View className={`p-5 rounded-xl mb-6 ${theme === "dark" ? "bg-gray-800" : "bg-blue-50"}`}>
             <Text className={`text-center mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
               Simulate your loan to see monthly payments, total interest, and more.
             </Text>
-            <Text className={`text-sm text-center ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
-              Adjust the sliders below to customize your loan parameters.
-            </Text>
           </View>
 
+          {/* Loan Amount Section */}
           <View className="mb-6">
             <Text className={`text-base font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
               Loan Amount
@@ -80,59 +118,53 @@ export default function CreditSimulatorScreen({ navigation }: any) {
                 className={`flex-1 text-lg font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}
                 value={loanAmount}
                 onChangeText={(text) => {
-                  const numericValue = text.replace(/[^0-9]/g, "")
-                  const formattedValue = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",")
-                  setLoanAmount(formattedValue)
+                  const numericValue = text.replace(/[^0-9]/g, "");
+                  const formattedValue = numericValue.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+                  setLoanAmount(formattedValue);
                 }}
                 keyboardType="numeric"
+                placeholder="10,000"
                 placeholderTextColor={theme === "dark" ? "#9ca3af" : "#94a3b8"}
               />
             </View>
             <Slider
-              minimumValue={10000}
-              maximumValue={500000}
-              step={5000}
-              value={Number.parseFloat(loanAmount.replace(/,/g, ""))}
+              minimumValue={1000}
+              maximumValue={100000}
+              step={1000}
+              value={parseFloat(loanAmount.replace(/,/g, "")) || 1000}
               onValueChange={(value) => {
-                setLoanAmount(value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","))
+                setLoanAmount(value.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ","));
               }}
               minimumTrackTintColor="#2563eb"
               maximumTrackTintColor={theme === "dark" ? "#374151" : "#e2e8f0"}
               thumbTintColor="#2563eb"
             />
             <View className="flex-row justify-between">
-              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>10,000 DT</Text>
-              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>500,000 DT</Text>
+              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>1,000 DT</Text>
+              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>100,000 DT</Text>
             </View>
           </View>
 
+          {/* Fixed Interest Rate Section */}
           <View className="mb-6">
             <Text className={`text-base font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
-              Interest Rate: {interestRate.toFixed(2)}%
+              Interest Rate
             </Text>
-            <Slider
-              minimumValue={1}
-              maximumValue={15}
-              step={0.1}
-              value={interestRate}
-              onValueChange={(value) => setInterestRate(value)}
-              minimumTrackTintColor="#2563eb"
-              maximumTrackTintColor={theme === "dark" ? "#374151" : "#e2e8f0"}
-              thumbTintColor="#2563eb"
-            />
-            <View className="flex-row justify-between">
-              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>1%</Text>
-              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>15%</Text>
+            <View className={`rounded-lg px-4 py-3 ${theme === "dark" ? "bg-gray-800" : "bg-gray-100"}`}>
+              <Text className={`text-lg font-semibold ${theme === "dark" ? "text-white" : "text-slate-900"}`}>
+                {interestRate.toFixed(2)}% (Fixed)
+              </Text>
             </View>
           </View>
 
+          {/* Loan Term Section */}
           <View className="mb-6">
             <Text className={`text-base font-medium mb-2 ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>
               Loan Term: {loanTerm} years
             </Text>
             <Slider
               minimumValue={1}
-              maximumValue={30}
+              maximumValue={maxTermYears}
               step={1}
               value={loanTerm}
               onValueChange={(value) => setLoanTerm(value)}
@@ -142,7 +174,9 @@ export default function CreditSimulatorScreen({ navigation }: any) {
             />
             <View className="flex-row justify-between">
               <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>1 year</Text>
-              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>30 years</Text>
+              <Text className={`text-xs ${theme === "dark" ? "text-gray-400" : "text-slate-500"}`}>
+                {maxTermYears} years
+              </Text>
             </View>
           </View>
 
@@ -160,13 +194,10 @@ export default function CreditSimulatorScreen({ navigation }: any) {
         animationType="slide"
         transparent={true}
         visible={showResults}
-        onRequestClose={() => {
-          setShowResults(false)
-        }}
+        onRequestClose={() => setShowResults(false)}
       >
         <View className="flex-1 justify-center items-center bg-black/50">
           <View 
-           
             className={`rounded-2xl p-5 mx-5 w-[90%] ${theme === "dark" ? "bg-gray-800" : "bg-white"}`}
             style={{
               shadowColor: "#000",
@@ -210,7 +241,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
               <View className={`flex-row justify-between items-center py-2 border-b ${theme === "dark" ? "border-gray-700" : "border-gray-100"}`}>
                 <Text className={`text-base ${theme === "dark" ? "text-gray-300" : "text-slate-700"}`}>Monthly Payment</Text>
                 <Text className="text-lg font-bold text-blue-600">
-                  {formatCurrency(calculateMonthlyPayment())} DT
+                  {formatCurrency(monthlyPayment)} DT
                 </Text>
               </View>
 
@@ -232,15 +263,7 @@ export default function CreditSimulatorScreen({ navigation }: any) {
             <View className="flex-row">
               <TouchableOpacity
                 className="flex-1 bg-blue-600 py-3 rounded-lg items-center mr-2"
-                onPress={() => {
-                  setShowResults(false)
-                  navigation.navigate("RequestCredit", {
-                    amount: loanAmount,
-                    interestRate: interestRate,
-                    term: loanTerm,
-                    monthlyPayment: calculateMonthlyPayment(),
-                  })
-                }}
+                onPress={handleApply}
               >
                 <Text className="text-white font-medium">Apply for This Loan</Text>
               </TouchableOpacity>
@@ -256,5 +279,5 @@ export default function CreditSimulatorScreen({ navigation }: any) {
         </View>
       </Modal>
     </View>
-  )
+  );
 }
